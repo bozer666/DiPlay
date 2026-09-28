@@ -2,6 +2,7 @@ package com.shilapi.xcertplay
 
 import android.content.Context
 import com.shilapi.xcertplay.airplay.AirPlayIdentity
+import com.shilapi.xcertplay.host.R
 import com.shilapi.xcertplay.mfi.LocalMfiAuthenticationClient
 import com.shilapi.xcertplay.orchestration.MfiTarget
 import java.io.File
@@ -51,12 +52,22 @@ internal object DiPlayBootstrap {
 internal object DiPlayPreferences {
     private fun prefs(context: Context) = context.getSharedPreferences("diplay", Context.MODE_PRIVATE)
     fun phoneAddress(context: Context): String? = prefs(context).getString("phone_address", null)
-    fun phoneName(context: Context): String = prefs(context).getString("phone_name", null) ?: "Your iPhone"
+    fun phoneName(context: Context): String =
+        prefs(context).getString("phone_name", null) ?: context.getString(R.string.phone_default_name)
     fun savePhone(context: Context, address: String, name: String) {
         prefs(context).edit().putString("phone_address", address).putString("phone_name", name).apply()
     }
     fun autoConnect(context: Context) = prefs(context).getBoolean("auto_connect", false)
     fun saveAutoConnect(context: Context, value: Boolean) {
         prefs(context).edit().putBoolean("auto_connect", value).apply()
+    }
+
+    /**
+     * The stored language choice, or null when the user has never chosen one. Null means "follow the
+     * head unit", which is why the head unit language is never written here as a default.
+     */
+    fun language(context: Context): String? = prefs(context).getString("language", null)
+    fun saveLanguage(context: Context, value: String) {
+        prefs(context).edit().putString("language", value).apply()
     }
 }

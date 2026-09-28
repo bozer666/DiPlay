@@ -1,0 +1,338 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  DiPlay 简体中文文案。
+
+  语言机制：未在设置里选择语言时不写入任何偏好，Android 直接按车机语言解析资源，
+  因此中文车机（含 zh-TW / zh-HK，本目录用 values-zh 语言级匹配）自动显示中文，
+  其它语言回退到 values 的英文。用户在设置里显式选择后由 AppLanguage 包装
+  Configuration 强制锁定。
+
+  本文件与 values/strings.xml 的键必须完全一致：lint 的 MissingTranslation /
+  ExtraTranslation 会让构建失败。诊断报告、会话日志与内部状态串不在此文件中。
+-->
+<resources>
+    <string name="app_name">DiPlay</string>
+
+    <!-- 主页 -->
+    <string name="home_action_car_home">车机主页</string>
+    <string name="action_back">返回</string>
+    <string name="home_tagline">你的手机，你的旅途</string>
+    <string name="home_headline">熟悉的驾驶感</string>
+    <string name="home_body">你的地图、音乐与通话。\nCarPlay，就在你的车机屏幕上。</string>
+    <string name="home_card_label">无线 CarPlay</string>
+    <string name="status_ready">随时可以开始</string>
+    <string name="action_connect_phone">连接手机</string>
+    <string name="home_pair_hint">先把 iPhone 与车机蓝牙配对，再发起连接。\n请保持蓝牙和 Wi-Fi 开启。</string>
+    <string name="home_hotspot_off">车机热点「%1$s」未开启。请先在车机设置里打开，再发起连接。</string>
+    <string name="action_open_car_hotspot_settings">打开车机热点设置</string>
+    <string name="action_choose_iphone">选择 iPhone</string>
+    <string name="action_disconnect">断开连接</string>
+    <string name="content_desc_carplay">CarPlay</string>
+    <string name="content_desc_carplay_icon">CarPlay 图标</string>
+    <string name="action_connect_usb">使用 USB 连接</string>
+    <string name="home_usb_hint">将 iPhone 接入 USB 数据口。\niPhone 询问时请选择允许 CarPlay。</string>
+    <string name="action_settings">设置</string>
+    <string name="home_settings_hint">让 DiPlay 更贴合你的车。</string>
+    <string name="home_preview_version">公开预览  ·  %1$s</string>
+    <string name="status_open_carplay">打开 CarPlay</string>
+    <string name="status_carplay_connected">CarPlay 已连接</string>
+    <string name="status_connecting">正在连接你的 iPhone…</string>
+    <string name="status_ready_for">已就绪：%1$s</string>
+    <string name="status_setup_attention">设置需要处理</string>
+    <string name="setup_error">本地初始化未完成。请重新安装完整的 DiPlay 测试版 APK 后再试。</string>
+
+    <!-- 设置 -->
+    <string name="settings_headline">你的车，你做主</string>
+    <string name="settings_body">点「应用并重新连接」会对尺寸、分辨率、音乐缓冲和帧率生效；其它改动在下次连接时生效。</string>
+    <string name="section_auto_connect">自动连接</string>
+    <string name="toggle_connect_on_open">打开 DiPlay 时自动连接</string>
+    <string name="toggle_connect_on_open_desc">使用上次的连接方式和已选择的 iPhone。</string>
+    <string name="toggle_autostart_boot">车机启动后自动打开</string>
+    <string name="toggle_autostart_boot_desc">能否生效取决于车机的开机启动设置。</string>
+    <string name="action_choose_iphone_named">选择 iPhone · %1$s</string>
+    <string name="section_wireless_connection">无线连接</string>
+    <string name="section_display_performance">显示与性能</string>
+    <string name="choice_carplay_size">CarPlay 尺寸</string>
+    <string name="choice_carplay_size_note">改变 CarPlay 图标和文字的大小。应用后需要重新连接 CarPlay。</string>
+    <string name="carplay_size_large">大</string>
+    <string name="carplay_size_medium">中</string>
+    <string name="carplay_size_small">小</string>
+    <string name="choice_resolution">分辨率</string>
+    <string name="choice_resolution_native">原生</string>
+    <string name="choice_resolution_80">80% · 负载更轻</string>
+    <string name="choice_resolution_60">60% · 负载最轻</string>
+    <string name="choice_music_buffer">音乐缓冲</string>
+    <string name="choice_music_buffer_300">300 ms · 默认</string>
+    <string name="choice_music_buffer_500">500 ms</string>
+    <string name="choice_music_buffer_1000">1000 ms · 最稳定</string>
+    <string name="choice_frame_rate">帧率</string>
+    <string name="choice_frame_rate_30">30 fps · 负载更轻</string>
+    <string name="choice_frame_rate_60">60 fps · 画面更流畅</string>
+    <string name="toggle_efficient_video">高效视频</string>
+    <string name="toggle_efficient_video_desc">使用 HEVC。关闭可获得最广泛的车机兼容性。</string>
+    <string name="toggle_right_hand_drive">右舵车</string>
+    <string name="toggle_right_hand_drive_desc">让 CarPlay 的操作控件更靠近驾驶位。</string>
+    <string name="toggle_full_screen">全屏</string>
+    <string name="toggle_full_screen_desc">CarPlay 打开时隐藏车机的系统栏。</string>
+    <string name="section_byd_navigation">BYD 导航</string>
+    <string name="toggle_byd_hud">在 HUD 和仪表盘上显示导航</string>
+    <string name="toggle_byd_hud_desc">在支持的 BYD 显示屏上显示手机导航的转向箭头、距离和道路名称。不同车型支持情况不同。</string>
+    <string name="section_permissions_help">权限与连接帮助</string>
+    <string name="permissions_body">「附近的设备」用于连接 iPhone，「麦克风」用于 Siri 和通话。较旧的 Android 版本还需要「位置信息」才能完成无线连接。USB 模式可能请求建立本地 VPN 连接。</string>
+    <string name="action_app_permissions">应用权限</string>
+    <string name="action_bluetooth_settings">蓝牙设置</string>
+    <string name="action_wireless_help">无线连接帮助</string>
+    <string name="section_about_diagnostics">关于与诊断</string>
+    <string name="action_about_diplay">关于 DiPlay</string>
+    <string name="action_save_report">保存诊断报告</string>
+    <string name="action_saving_report">正在保存报告…</string>
+    <string name="report_note_downloads">报告保存到 Downloads/DiPlay。不会自动上传任何内容。协议报文和凭据已被排除。</string>
+    <string name="report_note_choose">选择报告的保存位置。不会自动上传任何内容。协议报文和凭据已被排除。</string>
+
+    <!-- 语言 -->
+    <string name="section_language">语言 / Language</string>
+    <string name="choice_language">语言</string>
+    <string name="choice_language_named">语言 · %1$s</string>
+    <string name="language_english">English</string>
+    <string name="language_chinese">简体中文</string>
+    <string name="language_note">默认跟随车机语言；在此选择后会固定使用所选语言。选择后立即生效，CarPlay 本身在下次连接时切换。</string>
+    <string name="action_apply">应用</string>
+
+    <!-- 关于 -->
+    <string name="about_title">DiPlay</string>
+    <string name="about_tagline">CarPlay，在你的车里安家。</string>
+    <string name="about_preview">公开预览 · %1$s</string>
+    <string name="about_body">面向 Android 车机的独立 CarPlay 接收端。有线与无线连接都在车机上运行，并在本地完成认证。标准 iPhone 无需越狱、Mac、转接器或登录即可连接。\n\n本预览版使用实验性的配件身份。与所有 iPhone、车机的兼容性仍在测试中。本产品未获得 Apple 认证。</string>
+    <string name="about_oss_section">开源成就</string>
+    <string name="about_oss_body">接收端基于 xcertplay，采用 GPL-3.0 许可。DiPlay 的界面沿用 DiAuto 的设计，采用 AGPL-3.0 许可。\n\n包含 AndroidX、Bouncy Castle、JmDNS 和 SLF4J。源码与许可声明随本次发行一并提供。\n\nCarPlay 及 CarPlay 图标归 Apple Inc. 所有。DiPlay 是独立项目。</string>
+
+    <!-- 弹窗、提示与权限帮助 -->
+    <string name="dialog_hotspot_off_title">车机热点未开启</string>
+    <string name="dialog_hotspot_off_body">DiPlay 通过车机热点「%1$s」连接。请先在车机设置里打开，再发起连接。</string>
+    <string name="action_open_car_settings">打开车机设置</string>
+    <string name="action_connect">连接</string>
+    <string name="action_cancel">取消</string>
+    <string name="action_save">保存</string>
+    <string name="action_apply_reconnect">应用并重新连接</string>
+    <string name="wireless_link_wifi_direct">Wi-Fi Direct · 默认</string>
+    <string name="wireless_link_car_hotspot">车机热点</string>
+    <string name="action_wireless_link_named">无线连接方式 · %1$s</string>
+    <string name="dialog_wireless_link_title">无线连接方式</string>
+    <string name="wireless_p2p_note">DiPlay 会为 iPhone 自建一个 Wi-Fi Direct 网络。</string>
+    <string name="action_hotspot_name_named">热点名称 · %1$s</string>
+    <string name="dialog_hotspot_name_title">车机热点名称</string>
+    <string name="action_hotspot_password_named">热点密码 · %1$s</string>
+    <string name="value_none">未设置</string>
+    <string name="dialog_hotspot_password_title">车机热点密码</string>
+    <string name="hotspot_manual_note">请先在车机设置里打开热点，并在此填入相同的名称和密码。iPhone 会加入该网络以使用 CarPlay。改动在下次连接时生效。</string>
+    <string name="hotspot_problem_empty_ssid">请输入车机热点名称</string>
+    <string name="hotspot_problem_ssid_too_long">热点名称最长 32 字节</string>
+    <string name="hotspot_problem_invalid_character">名称或密码包含无效字符</string>
+    <string name="hotspot_problem_password_length">热点密码需为 8–63 个字符</string>
+    <string name="dialog_bluetooth_off_title">请开启蓝牙</string>
+    <string name="dialog_bluetooth_off_body">请先开启车机蓝牙并配对 iPhone。</string>
+    <string name="action_open_bluetooth">打开蓝牙</string>
+    <string name="action_later">稍后</string>
+    <string name="dialog_pair_iphone_title">配对 iPhone</string>
+    <string name="dialog_pair_iphone_body">在 iPhone 上打开「设置 → 蓝牙」与车机配对，然后回到 DiPlay 选择「连接手机」。</string>
+    <string name="action_got_it">知道了</string>
+    <string name="dialog_choose_iphone_title">选择你的 iPhone</string>
+    <string name="paired_device_fallback">已配对设备</string>
+    <string name="action_pair_another">配对其它手机</string>
+    <string name="dialog_wireless_help_title">无线连接帮助</string>
+    <string name="dialog_wireless_help_body">将 iPhone 与车机蓝牙配对，保持 Wi-Fi 开启，并在 iPhone 上允许 CarPlay。请关闭其它手机投屏应用。\n\n如果此前的投屏应用留下了未结束的连接，请先点下方「重置 CarPlay Wi-Fi」再重新连接。车机原本的上网 Wi-Fi 不受影响。</string>
+    <string name="action_reset_carplay_wifi">重置 CarPlay Wi-Fi</string>
+    <string name="dialog_reset_title">重置 CarPlay Wi-Fi？</string>
+    <string name="dialog_reset_body">这会结束当前已有的 Wi-Fi Direct 连接，包括重装后残留的连接。请先关闭其它投屏应用。车机原本的上网 Wi-Fi 不受影响。</string>
+    <string name="action_reset_and_connect">重置并连接</string>
+    <string name="toast_no_wifi_direct">该车机不支持 Wi-Fi Direct。</string>
+    <string name="toast_wifi_direct_busy">Wi-Fi Direct 仍被占用。请关闭其它投屏应用后重试。</string>
+    <string name="toast_wifi_reset_failed">无法重置 Wi-Fi Direct。请关闭其它投屏应用后重试。</string>
+    <string name="permission_help_wireless_title">无线连接权限</string>
+    <string name="permission_help_wireless_body">请先允许「附近的设备」权限；较旧的 Android 版本还需要允许「位置信息」，才能重置 CarPlay Wi-Fi。</string>
+    <string name="permission_help_nearby_title">附近的设备</string>
+    <string name="permission_help_nearby_body">请允许「附近的设备」权限，DiPlay 才能连接已配对的 iPhone。</string>
+    <string name="action_app_settings">应用设置</string>
+    <string name="toast_open_from_car_settings">请在车机的设置应用中打开该项。</string>
+    <string name="toast_save_location_unavailable">该车机无法打开保存位置。请重试保存到 Downloads。</string>
+    <string name="toast_no_file_picker">该车机没有可用的文件选择器，无法保存报告。</string>
+    <string name="dialog_report_saved_title">诊断报告已保存</string>
+    <string name="report_saved_path">Downloads/DiPlay/%1$s</string>
+    <string name="report_saved_other">报告已保存到你选择的位置。</string>
+    <string name="action_done">完成</string>
+    <string name="dialog_report_failed_title">无法保存报告</string>
+    <string name="dialog_report_failed_body">请检查存储是否可用，或选择其它保存位置。</string>
+    <string name="action_choose_location">选择位置</string>
+    <string name="action_close">关闭</string>
+
+    <!-- 前台服务通知 -->
+    <string name="notification_channel_connection">CarPlay 连接</string>
+    <string name="notification_title">DiPlay</string>
+    <string name="notification_text_running">CarPlay 连接运行中</string>
+
+    <!-- 尚未选择 iPhone 时显示的已存手机名 -->
+    <string name="phone_default_name">你的 iPhone</string>
+    <!-- 会话内 CarPlay 设置菜单 -->
+    <string name="stage_getting_ready">正在准备 CarPlay…</string>
+    <string name="panel_wireless_hint">请让 iPhone 保持在附近，并开启蓝牙和 Wi-Fi。\niPhone 询问时请选择允许 CarPlay。</string>
+    <string name="panel_usb_hint">请使用 USB 数据线连接并解锁 iPhone。\niPhone 询问时请选择信任并允许 CarPlay。</string>
+    <string name="action_back_to_diplay">返回 DiPlay</string>
+    <string name="panel_settings_hint">在 CarPlay 中三指下滑可打开 DiPlay 设置。</string>
+    <string name="carmenu_title">CarPlay 设置</string>
+    <string name="carmenu_category_connection">连接</string>
+    <string name="carmenu_wireless_carplay">无线 CarPlay</string>
+    <string name="carmenu_wireless_carplay_desc">无线 CarPlay 传输</string>
+    <string name="carmenu_hotspot_status">热点状态</string>
+    <string name="carmenu_category_location">位置</string>
+    <string name="carmenu_category_startup">启动</string>
+    <string name="carmenu_autostart_boot">开机自动启动</string>
+    <string name="carmenu_autostart_boot_desc">车机启动后自动开始 CarPlay</string>
+    <string name="carmenu_category_audio">音频</string>
+    <string name="carmenu_advanced_audio">高级音频声道映射</string>
+    <string name="carmenu_advanced_audio_desc">按 CarPlay 音频类型分配 AAOS 音频总线</string>
+    <string name="carmenu_category_identity">身份与外观</string>
+    <string name="carmenu_category_display_video">显示与视频</string>
+    <string name="carmenu_physical_size_basis">物理尺寸基准</string>
+    <string name="carmenu_physical_width">最大宽度</string>
+    <string name="carmenu_physical_height">最大高度</string>
+    <string name="carmenu_physical_length">物理长度</string>
+    <string name="carmenu_hevc">HEVC（H.265）</string>
+    <string name="carmenu_hevc_desc">HEVC H.265 视频传输</string>
+    <string name="carmenu_hevc_software">HEVC 软件解码器</string>
+    <string name="carmenu_hevc_software_desc">使用软件 HEVC 解码器</string>
+    <string name="carmenu_category_window">窗口</string>
+    <string name="carmenu_category_diagnostics">诊断</string>
+    <string name="carmenu_category_android9">Android 9 兼容性</string>
+    <string name="carmenu_android9_note">以下设置在 Android 9（API 28）上不可用并已隐藏：\n• Wi-Fi P2P（5 GHz）— 改用 LocalOnlyHotspot。\n• HEVC 软件解码器 — 改用硬件解码。</string>
+    <string name="carmenu_save_reconnect">保存并重新连接</string>
+    <string name="carmenu_exit_application">退出应用</string>
+    <string name="carmenu_discard_desc">放弃修改并退出设置</string>
+    <string name="carmenu_mfi_target">MFI 证书与签名目标</string>
+    <string name="carmenu_mfi_remote">远程</string>
+    <string name="carmenu_mfi_i2c_device">I2C 设备</string>
+    <string name="carmenu_mfi_i2c_hint">Linux 设备路径，例如 /dev/i2c-1。</string>
+    <string name="carmenu_mfi_server">服务器地址</string>
+    <string name="carmenu_mfi_token">令牌（可选）</string>
+    <string name="carmenu_mfi_server_hint">地址必须以 http:// 或 https:// 开头。令牌可选，会作为 Authorization Bearer 令牌发送。</string>
+    <string name="carmenu_identity_manufacturer">厂商</string>
+    <string name="carmenu_identity_model">型号</string>
+    <string name="carmenu_identity_oem_label">OEM 标签</string>
+    <string name="carmenu_location_report">向 iPhone 上报位置</string>
+    <string name="carmenu_location_report_desc">向 iPhone 上报 Android 位置</string>
+    <string name="carmenu_location_report_hint">iPhone 请求时，把精确的 Android 位置作为 CarPlay GPS 数据上报。</string>
+    <string name="carmenu_debug_logs">调试日志</string>
+    <string name="carmenu_debug_logs_desc">在屏幕上显示调试日志</string>
+    <string name="carmenu_airplay_icon">AirPlay 图标</string>
+    <string name="carmenu_choose_image">选择图片</string>
+    <string name="carmenu_default_icon">默认图标</string>
+    <string name="carmenu_driving_side">驾驶位</string>
+    <string name="carmenu_left_hand_drive">左舵车</string>
+    <string name="carmenu_fullscreen">全屏</string>
+    <string name="carmenu_hide_top_bar">隐藏顶栏</string>
+    <string name="carmenu_hide_top_bar_desc">隐藏状态栏</string>
+    <string name="carmenu_hide_bottom_bar">隐藏底栏</string>
+    <string name="carmenu_hide_bottom_bar_desc">隐藏导航栏</string>
+    <string name="carmenu_safe_area">安全区域</string>
+    <string name="carmenu_draw_outside_safe_area">在安全区域外绘制</string>
+    <string name="carmenu_draw_outside_safe_area_desc">允许 CarPlay 界面超出安全区域</string>
+    <string name="action_set">设置</string>
+    <string name="action_reset">重置</string>
+    <string name="carmenu_wifi_session">Wi-Fi 会话</string>
+    <string name="carmenu_mode_wifi_p2p">Wi-Fi P2P（5 GHz）</string>
+    <string name="carmenu_mode_manual_hotspot">手动热点</string>
+    <string name="carmenu_hotspot_ssid">热点名称（SSID）</string>
+    <string name="carmenu_hotspot_band">频段</string>
+    <string name="carmenu_band_auto">自动</string>
+    <string name="carmenu_hotspot_channel">信道（0 = 自动）</string>
+    <string name="carmenu_hotspot_password">热点密码</string>
+    <string name="carmenu_hotspot_security">安全类型</string>
+    <string name="carmenu_security_open">开放</string>
+    <string name="carmenu_security_wpa3_transition">WPA3 过渡模式</string>
+    <string name="carmenu_hotspot_off_status">无线热点：已关闭</string>
+    <string name="carmenu_hotspot_label">无线热点：%1$s</string>
+    <string name="carmenu_hotspot_ssid_line">SSID：%1$s</string>
+    <string name="carmenu_hotspot_backend_line">后端：%1$s</string>
+    <string name="carmenu_hotspot_band_line">频段：%1$s</string>
+    <string name="carmenu_hotspot_channel_line">信道：%1$s</string>
+    <string name="carmenu_channel_auto">自动</string>
+    <string name="carmenu_hotspot_state_starting">正在启动</string>
+    <string name="carmenu_hotspot_state_ready">就绪</string>
+    <string name="carmenu_hotspot_state_waiting_iphone">等待已配对的 iPhone</string>
+    <string name="carmenu_hotspot_state_connecting_bluetooth">正在连接蓝牙</string>
+    <string name="carmenu_hotspot_state_running">运行中</string>
+    <string name="carmenu_hotspot_state_active">已激活</string>
+    <string name="carmenu_hotspot_state_starting_airplay">正在启动 AirPlay 服务</string>
+    <string name="carmenu_hotspot_state_error">错误</string>
+    <string name="carmenu_hotspot_state_stopped">已停止</string>
+    <string name="carmenu_hotspot_state_off">已关闭</string>
+    <string name="carmenu_error_i2c_required">需要填写 I2C 设备路径</string>
+    <string name="carmenu_error_mfi_server_required">需要填写远程服务器地址</string>
+    <string name="carmenu_error_mfi_server_scheme">远程服务器地址必须以 http:// 或 https:// 开头</string>
+    <string name="carmenu_error_i2c_null">I2C 设备路径包含 U+0000</string>
+    <string name="carmenu_error_mfi_server_null">远程服务器地址包含 U+0000</string>
+    <string name="carmenu_error_mfi_token_null">远程令牌包含 U+0000</string>
+    <string name="carmenu_error_hotspot_ssid_required">需要填写热点名称</string>
+    <string name="carmenu_error_hotspot_ssid_long">热点名称最长 32 个 UTF-8 字节</string>
+    <string name="carmenu_error_hotspot_ssid_null">热点名称包含 U+0000</string>
+    <string name="carmenu_error_hotspot_channel_range">信道必须为 0 或 1-196</string>
+    <string name="carmenu_error_hotspot_channel_band">该信道不适用于所选频段</string>
+    <string name="carmenu_error_hotspot_password_null">热点密码包含 U+0000</string>
+    <string name="carmenu_error_hotspot_password_open">安全类型为「开放」时密码必须为空</string>
+    <string name="carmenu_error_hotspot_password_length">WPA2/WPA3 密码需为 8-63 个字符</string>
+    <string name="carmenu_preview_handshake_waiting">握手分辨率：等待显示信息</string>
+    <string name="carmenu_preview_handshake">握手分辨率：%1$s x %2$s → %3$s x %4$s</string>
+    <string name="carmenu_preview_identity">身份：%1$s / %2$s</string>
+    <string name="carmenu_preview_oem_label">OEM 标签：%1$s</string>
+    <string name="carmenu_preview_oem_empty">（空）</string>
+    <string name="carmenu_preview_frame_rate">帧率：%1$s fps</string>
+    <string name="carmenu_preview_detected_max">检测到的最大值：%1$s x %2$s px</string>
+    <string name="carmenu_preview_physical_reference">物理基准：%1$s = %2$s mm</string>
+    <string name="carmenu_preview_physical_width">最大宽度</string>
+    <string name="carmenu_preview_physical_height">最大高度</string>
+    <string name="carmenu_preview_carplay_physical_size">CarPlay 物理尺寸：%1$s x %2$s mm</string>
+    <string name="carmenu_preview_driving_side">驾驶位：%1$s</string>
+    <string name="carmenu_preview_right">右舵</string>
+    <string name="carmenu_preview_left">左舵</string>
+    <string name="carmenu_preview_fullscreen">全屏：%1$s</string>
+    <string name="carmenu_preview_top_hidden">顶栏隐藏</string>
+    <string name="carmenu_preview_top_shown">顶栏显示</string>
+    <string name="carmenu_preview_bottom_hidden">底栏隐藏</string>
+    <string name="carmenu_preview_bottom_shown">底栏显示</string>
+    <string name="carmenu_preview_video_transport">视频传输：%1$s</string>
+    <string name="carmenu_preview_location_reporting">位置上报：%1$s</string>
+    <string name="carmenu_preview_enabled">已开启</string>
+    <string name="carmenu_preview_disabled">已关闭</string>
+    <string name="carmenu_preview_audio_channel_mapping">音频声道映射：%1$s</string>
+    <string name="carmenu_preview_aaos_buses">AAOS 总线</string>
+    <string name="carmenu_preview_mobile_compatible">手机兼容模式</string>
+    <string name="carmenu_preview_transport_software">软件</string>
+    <string name="carmenu_preview_transport_hardware">硬件</string>
+    <string name="carmenu_icon_custom">自定义 1:1 图标</string>
+    <string name="carmenu_icon_default">默认占位图标</string>
+    <string name="carmenu_safe_area_waiting">安全区域：等待界面尺寸</string>
+    <string name="carmenu_safe_area_fullscreen">安全区域：全屏 %1$s x %2$s</string>
+    <string name="carmenu_safe_area_mapping">安全区域：%1$s x %2$s，位于 (%3$s, %4$s)，画布 %5$s x %6$s</string>
+    <string name="toast_smaller_size_unavailable">该车机在此分辨率下无法使用更小的尺寸，已改用默认值。</string>
+    <string name="stage_turn_on_wifi">请在车机设置里打开 Wi-Fi 后连接。</string>
+    <string name="stage_allow_precise_location">请在车机的应用权限里允许 DiPlay 使用精确位置信息。</string>
+    <string name="stage_allow_nearby_devices">请在车机的应用权限里允许 DiPlay 使用「附近的设备」。</string>
+    <string name="stage_wifi_start_failed">车机无法启动 CarPlay Wi-Fi。请检查 Wi-Fi 并关闭其它投屏应用，正在重试…</string>
+    <string name="stage_reset_required">上一次 Wi-Fi Direct 连接仍在运行。请重置后再连接。</string>
+    <string name="stage_iphone_unavailable">你的 iPhone 当前不可用。请解锁并检查蓝牙。</string>
+    <string name="stage_wireless_unsupported">该车机可能不支持无线 CarPlay，请改用 USB 连接。</string>
+    <string name="stage_allow_permission">请允许连接权限以继续</string>
+    <string name="stage_connection_interrupted">连接已中断，正在重试…</string>
+    <string name="stage_connect_usb_cable">请用 USB 数据线连接 iPhone</string>
+    <string name="stage_looking_for_paired_iphone">正在查找已配对的 iPhone…</string>
+    <string name="stage_reconnecting">正在重新连接你的 iPhone…</string>
+    <string name="stage_opening_carplay">正在打开 CarPlay…</string>
+
+    <!-- AirPlay 图标裁剪界面 -->
+    <string name="crop_loading">正在载入图片</string>
+    <string name="crop_save">保存为 1:1</string>
+    <string name="crop_decode_failed">无法解析图片</string>
+    <string name="crop_drag_hint">拖动可移动，双指可缩放</string>
+    <string name="crop_not_ready">图片尚未准备好</string>
+    <string name="crop_encode_failed">无法编码图片</string>
+    <string name="crop_save_failed">无法保存图片</string>
+</resources>

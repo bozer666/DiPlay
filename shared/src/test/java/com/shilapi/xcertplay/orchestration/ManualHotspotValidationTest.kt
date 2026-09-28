@@ -1,7 +1,6 @@
 package com.shilapi.xcertplay.orchestration
 
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Test
 
@@ -16,9 +15,25 @@ class ManualHotspotValidationTest {
 
     @Test
     fun `rejects what the iPhone cannot join`() {
-        assertNotNull(ManualHotspotValidation.validate(" ", "12345678"))
-        assertNotNull(ManualHotspotValidation.validate("BYD", "short"))
-        assertNotNull(ManualHotspotValidation.validate("x".repeat(33), "12345678"))
-        assertNotNull(ManualHotspotValidation.validate("BYD", "a".repeat(64)))
+        assertEquals(
+            ManualHotspotValidation.Problem.EMPTY_SSID,
+            ManualHotspotValidation.validate(" ", "12345678"),
+        )
+        assertEquals(
+            ManualHotspotValidation.Problem.PASSWORD_LENGTH,
+            ManualHotspotValidation.validate("BYD", "short"),
+        )
+        assertEquals(
+            ManualHotspotValidation.Problem.SSID_TOO_LONG,
+            ManualHotspotValidation.validate("x".repeat(33), "12345678"),
+        )
+        assertEquals(
+            ManualHotspotValidation.Problem.PASSWORD_LENGTH,
+            ManualHotspotValidation.validate("BYD", "a".repeat(64)),
+        )
+        assertEquals(
+            ManualHotspotValidation.Problem.INVALID_CHARACTER,
+            ManualHotspotValidation.validate("BYD", "1234\u00005678"),
+        )
     }
 }

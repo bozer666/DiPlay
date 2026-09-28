@@ -3,6 +3,9 @@ package com.shilapi.xcertplay.airplay
 /**
  * The single user-facing CarPlay size. iOS keeps controls at a fixed physical size, so the size
  * is expressed as the physical screen width reported to the iPhone: a wider screen gets smaller controls.
+ *
+ * [label] is the stable English value used by the exported diagnostic report and the session log.
+ * It must never be moved into a resource: the UI maps the enum to localized copy separately.
  */
 enum class CarPlaySize(val label: String, val widthMillimeters: Int) {
     LARGE("Large", 250),
