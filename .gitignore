@@ -38,3 +38,7 @@ release-signing.properties
 *.key
 *.apk
 *.aab
+
+# Python tooling (scripts/*.py are tracked; keep bytecode out)
+__pycache__/
+*.pyc
