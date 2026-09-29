@@ -377,3 +377,25 @@
 | APK 内容抽查 | `aapt2 dump resources` 可见 `(zh)` 资源，中文文案确实打进包 |
 
 **测试策略说明（重要，避免后人踩坑）**：本仓库的本地单测**没有开启 `testIncludeAndroidResources`**，`R.string.*` 在单测里是桩 id，`getString` 会抛 `Resources$NotFoundException`。因此 `AppLanguageTest` 只断言 Configuration 层（强制/不干预、生效语言），文案本身由 `LocalizedCopyTest` 在源码层校验（键集合完全一致 + 除白名单外中文不得与英文逐字相同 + 中文不得为空）。翻译完整性另由 lint 门禁保证。
+
+---
+
+## 9. 合并 main → develop（冲突解决记录）
+
+`main` 领先 `develop` 9 个提交（BYD 仪表盘地图、本地热点重构、0.2.6 发版准备）。合并时**只有两个文件冲突**，因为 git 已把大部分 `getString` 本地化和 main 的新代码自动合并：
+
+| 位置 | main 的改动 | 处理 |
+|---|---|---|
+| `DiPlayActivity.kt` 导入 / 字段 / `onSaveInstanceState` | 新增 `CarPlayClusterDisplay`、`pendingCarHotspotSetup`、保存 `pending_car_hotspot` | **两边都要**：保留 main 的新字段与状态保存，同时保留 `CarPlaySize` 导入、`recreatingForLanguage` / `skipAutoConnectOnResume` / `KEY_SKIP_AUTO_CONNECT` 守卫 |
+| `DiPlayActivity.kt` 初始化失败处理 | 新增 `Log.e` 并改写提示语 | 取 main 的逻辑，文案进资源（`setup_error` 已更新为 main 的新措辞） |
+| `DiPlayActivity.kt` 主页连接提示 | 按热点模式给三种提示 | 取 main 的三分支逻辑，三条文案新增资源键 |
+| `DiPlayActivity.kt` `settings()` | 重构为图标分区：新增「连接设置」「诊断」，`section()` 增加 `icon` 参数 | 取 main 的结构与图标，标题/正文全部走资源；「语言」分区保留在「权限」与「关于」之间 |
+| `DiPlayActivity.kt` BYD / 仪表盘分区 | 新增仪表盘地图、主题跟随、Usage Access、主题/对比度/地图尺寸/车辆标记等开关 | 取 main 的全部逻辑，文案新增资源键；枚举标签 `DiLink51ClusterLayout.Theme/Contrast.label` 保持英文供日志使用，UI 走 `clusterThemeLabel()` / `clusterContrastLabel()` 映射 |
+| `DiPlayActivity.kt` `wirelessLinkControls()` | 重写为「车机自带热点 / Wi-Fi Direct」双选卡片 + 热点设置步骤 | 取 main 的整段实现，文案全量资源化 |
+| `DiPlayActivity.kt` `askHotspotCredentials()` | 重写为带输入框、显示密码、实时错误、键盘控制的自定义对话框 | 取 main 的实现，标题/提示/按钮资源化 |
+| `DiPlayActivity.kt` 报告保存对话框 | 新增「分享」按钮与 share Intent | 取 main 的实现，按钮与 chooser 标题资源化 |
+| `CarPlayHostActivity.kt` 会话内热点模式列表 | 移除 `LocalOnlyHotspot` 选项，`Manual hotspot` 改名 `Built-in car hotspot` | 取 main 的列表，标签走新键 `carmenu_mode_builtin_hotspot` |
+
+**顺带清理**：删除 15 个因 main 重写界面而失效的资源键（`home_pair_hint`、`section_wireless_connection`、`wireless_link_*`、`action_hotspot_*_named`、`dialog_hotspot_*_title`、`hotspot_manual_note`、`value_none`、`wireless_p2p_note`、`section_about_diagnostics`、`carmenu_mode_manual_hotspot`）；删除因同类重写而变成死代码的 `textInput()` 辅助函数。
+
+**合并后资源规模**：`values/strings.xml` 与 `values-zh/strings.xml` 各 **379** 键，键集合逐字一致。`LocalizedCopyTest` 的「刻意同文」白名单新增 `cluster_marker_step`（纯格式串）与 `wireless_mode_wifi_direct`（Wi-Fi 联盟专名）。

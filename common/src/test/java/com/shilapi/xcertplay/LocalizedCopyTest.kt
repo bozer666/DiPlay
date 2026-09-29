@@ -23,6 +23,8 @@ class LocalizedCopyTest {
         "language_chinese",
         "choice_music_buffer_500",
         "report_saved_path",
+        "cluster_marker_step",
+        "wireless_mode_wifi_direct",
     )
 
     @Test
