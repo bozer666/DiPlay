@@ -107,7 +107,8 @@ class ManualHotspotManager(
                 onDiagnostic("Manual hotspot configReadable=${apConfiguration != null} " +
                     "security=$security channelKnown=${channel > 0} " +
                     "hardwareAddressKnown=${localInterface.hardwareAddress != null} iface=${localInterface.name} " +
-                    "family=${if (localInterface.hostAddress is Inet6Address) "IPv6" else "IPv4"}")
+                    "family=${if (localInterface.hostAddress is Inet6Address) "IPv6" else "IPv4"} " +
+                    "addrs=${localInterface.allAddresses}")
                 if (security != Iap2WirelessSecurity.NONE && passphrase.isEmpty()) {
                     throw IOException("Manual hotspot is secured but no passphrase was provided")
                 }
@@ -218,6 +219,8 @@ class ManualHotspotManager(
                             .getOrNull()?.takeUnless { it == "02:00:00:00:00:00" || it == "00:00:00:00:00:00" }
                             ?: HotspotInterfaceBssid.read(networkInterface.name),
                         score = interfaceScore(networkInterface.name, address),
+                        allAddresses = Collections.list(networkInterface.inetAddresses)
+                            .joinToString(",") { it.hostAddress ?: "?" },
                     )
                 }
             }
@@ -428,6 +431,7 @@ class ManualHotspotManager(
         val hostAddress: InetAddress,
         val hardwareAddress: String?,
         val score: Int,
+        val allAddresses: String,
     )
 
     private companion object {
