@@ -28,18 +28,6 @@ jobs:
           printf '%s' "$DIPLAY_IDENTITY_PK8_B64" | base64 -d > /tmp/diplay-auth/offline-mfi/identity.pk8
           printf '%s' "$DIPLAY_CERTIFICATE_P7B_B64" | base64 -d > /tmp/diplay-auth/offline-mfi/certificate.p7b
           ls -la /tmp/diplay-auth/offline-mfi/
-      - name: Restore stable debug keystore from secrets
-        env:
-          DIPLAY_DEBUG_KEYSTORE_B64: ${{ secrets.DIPLAY_DEBUG_KEYSTORE_B64 }}
-        run: |
-          if [ -z "$DIPLAY_DEBUG_KEYSTORE_B64" ]; then
-            echo "DIPLAY_DEBUG_KEYSTORE_B64 secret is missing; refusing to build with a random debug key." >&2
-            exit 1
-          fi
-          mkdir -p ~/.android
-          printf '%s' "$DIPLAY_DEBUG_KEYSTORE_B64" | base64 -d > ~/.android/debug.keystore
-          chmod 600 ~/.android/debug.keystore
-          ls -la ~/.android/debug.keystore
       - name: Build standalone APK
         env:
           DIPLAY_AUTH_ASSETS_DIR: /tmp/diplay-auth
