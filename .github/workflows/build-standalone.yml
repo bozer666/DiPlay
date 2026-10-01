@@ -17,12 +17,8 @@ jobs:
           java-version: '25'
       - uses: android-actions/setup-android@v3
         with:
-          packages: platform-tools platforms;android-36 build-tools;36.0.0 ndk;28.2.13676358
+          packages: platform-tools platforms;android-37.0 build-tools;36.0.0 ndk;28.2.13676358
       - uses: gradle/actions/setup-gradle@v4
-      - name: Downgrade to SDK 36 (CI-local only, not committed)
-        run: |
-          sed -i 's/version = release(37)/version = release(36)/; s/targetSdk = 37/targetSdk = 36/' mobile/build.gradle.kts common/build.gradle.kts
-          sed -i 's/compileSdk = 37/compileSdk = 36/; s/targetSdk = 37/targetSdk = 36/' shared/build.gradle
       - name: Restore accessory identity from secrets
         env:
           DIPLAY_IDENTITY_PK8_B64: ${{ secrets.DIPLAY_IDENTITY_PK8_B64 }}
