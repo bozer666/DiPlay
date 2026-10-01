@@ -55,7 +55,9 @@ class DiagnosticRedactorTest {
                     it.append("password=secret")
                 }
             }
-            val history = SessionLogFile.REPORT_NAMES.map { folder.resolve(it).readText() }
+            val history = SessionLogFile.REPORT_NAMES.mapNotNull { name ->
+                folder.resolve(name).takeIf { it.isFile }?.readText()
+            }
             assertEquals(8, folder.listFiles()!!.size)
             assertTrue(history.first().contains("session=2"))
             assertTrue(history.last().contains("session=9"))
