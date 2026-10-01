@@ -32,8 +32,17 @@ jobs:
         env:
           DIPLAY_AUTH_ASSETS_DIR: /tmp/diplay-auth
         run: ./gradlew :mobile:assembleStandaloneDebug --stacktrace
+      - name: Rename APK with version and timestamp
+        run: |
+          VERSION=$(grep -m1 -oP 'versionName = "\K[^"]+' mobile/build.gradle.kts)
+          SUFFIX=$(grep -m1 -oP 'versionNameSuffix = "\K[^"]+' mobile/build.gradle.kts)
+          STAMP=$(TZ=Asia/Shanghai date +%y%m%d%H%M)
+          SRC=mobile/build/outputs/apk/debug/mobile-debug.apk
+          DST=mobile/build/outputs/apk/debug/diplay-${VERSION}${SUFFIX}-${STAMP}.apk
+          mv "$SRC" "$DST"
+          ls -la mobile/build/outputs/apk/debug/
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: diplay-lynk-osn-wireless-standalone
-          path: mobile/build/outputs/apk/debug/mobile-debug.apk
+          path: mobile/build/outputs/apk/debug/diplay-*.apk
