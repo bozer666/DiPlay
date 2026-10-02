@@ -862,7 +862,11 @@ private class AudioRenderer(
             )
         }
         track = built
-        trackAttributes = built.audioAttributes
+        // AudioTrack.getAudioAttributes() requires API 29+; on older releases keep the
+        // attributes the track was built with (assigned above).
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            trackAttributes = built.audioAttributes
+        }
         val capacityBytes = built.bufferSizeInFrames * frameBytes
         startThresholdBytes = MediaAudioBuffer.startBytesFor(plan.startBytes, capacityBytes, PREBUFFER_WRITE_CHUNK_BYTES)
         report("Audio: ready audioType=${format.audioType} codec=${format.codec} " +
