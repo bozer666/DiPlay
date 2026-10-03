@@ -69,6 +69,8 @@ class DiPlayActivity : ComponentActivity() {
     private var steeringLearning: String? = null
     private val steeringButtons = mutableMapOf<String, Button>()
     private var steeringHint: TextView? = null
+    /** Visible last-received-key indicator inside the mapping dialog. */
+    private var steeringLastKey: TextView? = null
     private var adbStatus: TextView? = null
     private var adbCheckGeneration = 0
     private val notificationPermission = registerForActivityResult(ActivityResultContracts.RequestPermission()) {
@@ -660,6 +662,10 @@ class DiPlayActivity : ComponentActivity() {
             setPadding(dp(8), 0, dp(8), dp(12))
         }
         steeringHint = hint
+        val lastKey = label("", 14, ACCENT).apply {
+            setPadding(dp(8), 0, dp(8), dp(12))
+        }
+        steeringLastKey = lastKey
 
         val grid = GridLayout(this).apply { columnCount = 2 }
         for (id in SteeringKeyMap.ACTIONS) {
@@ -692,7 +698,7 @@ class DiPlayActivity : ComponentActivity() {
         val container = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
             setPadding(dp(16), dp(8), dp(16), dp(8))
-            addView(hint); addView(grid)
+            addView(hint); addView(lastKey); addView(grid)
         }
         AlertDialog.Builder(this).setTitle(getString(R.string.key_mapping))
             .setView(container)
@@ -701,9 +707,17 @@ class DiPlayActivity : ComponentActivity() {
                 steeringLearning = null
                 steeringButtons.clear()
                 steeringHint = null
+                steeringLastKey = null
                 CarPlayMediaKeys.keyCapture = null
             }
             .show()
+    }
+
+    /** Show the last received key in the dialog so the user sees immediately if the wheel reaches the app. */
+    private fun showSteeringLastKey(keyCode: Int, via: String) {
+        val text = "收到按键 ($via): keyCode $keyCode ${KeyEvent.keyCodeToString(keyCode)}"
+        android.util.Log.i("DiPlaySetup", "steering dialog $text")
+        runOnUiThread { steeringLastKey?.text = text }
     }
 
     private fun steeringActionName(id: String): String = when (id) {
@@ -750,6 +764,7 @@ class DiPlayActivity : ComponentActivity() {
         refreshSteeringButtons(SteeringKeyMap.loadBindings(this))
         // Also capture keys arriving via the MediaSession (when a CarPlay session is active).
         CarPlayMediaKeys.keyCapture = { code ->
+            showSteeringLastKey(code, "MediaSession")
             val learning = steeringLearning
             if (learning != null) {
                 runOnUiThread { bindSteeringKey(learning, code) }
@@ -769,10 +784,15 @@ class DiPlayActivity : ComponentActivity() {
     }
 
     override fun dispatchKeyEvent(event: KeyEvent): Boolean {
-        val learning = steeringLearning
-        if (learning != null && event.action == KeyEvent.ACTION_DOWN && event.repeatCount == 0) {
-            bindSteeringKey(learning, event.keyCode)
-            return true
+        if (event.action == KeyEvent.ACTION_DOWN && event.repeatCount == 0) {
+            // Show every key while the mapping dialog is open, so the user sees
+            // immediately whether the steering wheel reaches the app at all.
+            if (steeringButtons.isNotEmpty()) showSteeringLastKey(event.keyCode, "window")
+            val learning = steeringLearning
+            if (learning != null) {
+                bindSteeringKey(learning, event.keyCode)
+                return true
+            }
         }
         return super.dispatchKeyEvent(event)
     }
