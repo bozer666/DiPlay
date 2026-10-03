@@ -35,6 +35,18 @@ android {
             keyAlias = providers.environmentVariable("ANDROID_KEY_ALIAS").getOrElse("")
             keyPassword = providers.environmentVariable("ANDROID_KEY_PASSWORD").getOrElse("")
         }
+        // Explicit debug keystore: CI restores the stable key from secrets to
+        // $DIPLAY_DEBUG_KEYSTORE. Falls back to the AGP default location so
+        // local builds are unaffected.
+        getByName("debug") {
+            storeFile = file(
+                providers.environmentVariable("DIPLAY_DEBUG_KEYSTORE")
+                    .getOrElse("${System.getProperty("user.home")}/.android/debug.keystore"),
+            )
+            storePassword = "android"
+            keyAlias = "androiddebugkey"
+            keyPassword = "android"
+        }
     }
 
     buildTypes {

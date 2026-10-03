@@ -48,6 +48,7 @@ jobs:
       - name: Build standalone APK
         env:
           DIPLAY_AUTH_ASSETS_DIR: /tmp/diplay-auth
+          DIPLAY_DEBUG_KEYSTORE: ${{ env.HOME }}/.android/debug.keystore
         run: ./gradlew :mobile:assembleStandaloneDebug --stacktrace
       - name: Check keystore after build
         run: |
