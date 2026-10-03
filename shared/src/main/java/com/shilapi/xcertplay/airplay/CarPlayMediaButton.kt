@@ -16,6 +16,20 @@ object CarPlayMediaButton {
     const val NEXT = 4
     const val PREVIOUS = 5
 
+    /** Custom-mapped actions that are not CarPlay HID presses. */
+    const val VOLUME_UP = 6
+    const val VOLUME_DOWN = 7
+    const val VOICE = 8
+
+    /**
+     * User-configured steering-wheel mapping: Android keyCode -> action.
+     * Set by the app layer from [SteeringKeyMap]; checked before built-in keys.
+     */
+    var customKeyMap: Map<Int, Int> = emptyMap()
+
+    /** True when [action] is a CarPlay HID media press (indices 1..5) sent to the iPhone. */
+    fun isHidPress(action: Int): Boolean = action in PLAY..PREVIOUS
+
     /** BYD's steering-wheel play/pause key; the firmware normally rewrites it to MEDIA_PLAY/PAUSE. */
     const val KEYCODE_BYD_AUTO_MEDIA_PLAY_PAUSE = 353
 
@@ -30,15 +44,16 @@ object CarPlayMediaButton {
     fun opensSiri(keyCode: Int): Boolean = keyCode == KeyEvent.KEYCODE_VOICE_ASSIST ||
         keyCode == KEYCODE_BYD_AUTO_MEDIA_VOICE || keyCode == KEYCODE_BYD_AUTO_MEDIA_VOICE_LONG
 
-    /** The CarPlay press for [keyCode], or null when the key is not a media key CarPlay handles. */
-    fun forKeyCode(keyCode: Int): Int? = when (keyCode) {
-        KeyEvent.KEYCODE_MEDIA_NEXT -> NEXT
-        KeyEvent.KEYCODE_MEDIA_PREVIOUS -> PREVIOUS
-        KeyEvent.KEYCODE_MEDIA_PLAY,
-        KeyEvent.KEYCODE_MEDIA_PAUSE,
-        KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE,
-        KeyEvent.KEYCODE_HEADSETHOOK,
-        KEYCODE_BYD_AUTO_MEDIA_PLAY_PAUSE -> PLAY_PAUSE
-        else -> null
-    }
+    /** The action for [keyCode]: user mapping first, then built-in keys. Null when unhandled. */
+    fun forKeyCode(keyCode: Int): Int? =
+        customKeyMap[keyCode] ?: when (keyCode) {
+            KeyEvent.KEYCODE_MEDIA_NEXT -> NEXT
+            KeyEvent.KEYCODE_MEDIA_PREVIOUS -> PREVIOUS
+            KeyEvent.KEYCODE_MEDIA_PLAY,
+            KeyEvent.KEYCODE_MEDIA_PAUSE,
+            KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE,
+            KeyEvent.KEYCODE_HEADSETHOOK,
+            KEYCODE_BYD_AUTO_MEDIA_PLAY_PAUSE -> PLAY_PAUSE
+            else -> null
+        }
 }

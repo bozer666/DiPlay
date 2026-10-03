@@ -478,4 +478,17 @@
     <string name="center_map_no_permission_screen">This head unit has no settings screen for this permission. Allow it over ADB.</string>
     <string name="launcher_map_sharing">Share the live map with other launchers</string>
     <string name="launcher_map_sharing_description">Launchers that support DiPlay can show the live dashboard map inside their own home screen. Off by default, because any app on the head unit could then ask for the map. See docs/LAUNCHER_INTEGRATION.md.</string>
+    <string name="steering_wheel_keys">Steering wheel keys</string>
+    <string name="key_mapping">Key mapping</string>
+    <string name="key_mapping_desc">Bind steering-wheel buttons to CarPlay actions. Tap a button, then press the wheel key.</string>
+    <string name="press_steering_key">Press the steering-wheel button…</string>
+    <string name="tap_to_bind">Tap to bind</string>
+    <string name="long_press_to_unbind">Long-press to unbind</string>
+    <string name="steer_previous">Previous track</string>
+    <string name="steer_next">Next track</string>
+    <string name="steer_play_pause">Play/Pause</string>
+    <string name="steer_volume_up">Volume up</string>
+    <string name="steer_volume_down">Volume down</string>
+    <string name="steer_voice">Voice assistant</string>
+    <string name="key_unbound">unbound</string>
 </resources>

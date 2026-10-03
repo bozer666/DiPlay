@@ -36,6 +36,18 @@ internal object CarPlayMediaKeys {
      * Set by the host activity to route into the exported diagnostic report.
      */
     var diagnosticLog: ((String) -> Unit)? = null
+
+    /**
+     * Learn-mode capture for the steering-wheel mapping dialog: when set, the next
+     * media-button key down is reported and consumed instead of being handled.
+     * Return true from [capture] to consume the key.
+     */
+    var keyCapture: ((Int) -> Boolean)? = null
+
+    /** (Re)load the user steering-wheel mapping into [CarPlayMediaButton.customKeyMap]. */
+    fun refreshKeyMap(context: Context) {
+        CarPlayMediaButton.customKeyMap = SteeringKeyMap.loadReverseMap(context)
+    }
     private const val ACTIONS = PlaybackState.ACTION_PLAY or PlaybackState.ACTION_PAUSE or
         PlaybackState.ACTION_PLAY_PAUSE or PlaybackState.ACTION_SKIP_TO_NEXT or PlaybackState.ACTION_SKIP_TO_PREVIOUS
 
@@ -222,14 +234,48 @@ internal object CarPlayMediaKeys {
     }
 
     private fun send(index: Int, source: String) {
-        // While the car's video player is on screen the wheel drives it: a CarPlay play/pause would
-        // make the iPhone end the video session.
-        if (CarPlayVideo.onMediaKey(index)) {
-            Log.i(TAG, "media key $source -> car video player $index")
-            return
+        performAction(index, source)
+    }
+
+    /**
+     * Perform a steering-wheel action from any source (media session, window keys).
+     * HID media presses go to the iPhone; volume adjusts the music stream; voice opens Siri.
+     */
+    fun performAction(action: Int, source: String) {
+        when (action) {
+            CarPlayMediaButton.VOLUME_UP -> adjustVolume(AudioManager.ADJUST_RAISE, source)
+            CarPlayMediaButton.VOLUME_DOWN -> adjustVolume(AudioManager.ADJUST_LOWER, source)
+            CarPlayMediaButton.VOICE -> {
+                val sent = synchronized(this) { controller }?.requestSiri() == true
+                Log.i(TAG, "steering key $source -> Siri sent=$sent")
+            }
+            else -> {
+                if (!CarPlayMediaButton.isHidPress(action)) {
+                    Log.i(TAG, "steering key $source -> unknown action $action")
+                    return
+                }
+                // While the car's video player is on screen the wheel drives it: a CarPlay play/pause would
+                // make the iPhone end the video session.
+                if (CarPlayVideo.onMediaKey(action)) {
+                    Log.i(TAG, "media key $source -> car video player $action")
+                    return
+                }
+                val sent = synchronized(this) { controller }?.sendMediaButton(action) ?: false
+                Log.i(TAG, "media key $source -> CarPlay $action sent=$sent")
+            }
         }
-        val sent = synchronized(this) { controller }?.sendMediaButton(index) ?: false
-        Log.i(TAG, "media key $source -> CarPlay $index sent=$sent")
+    }
+
+    private fun adjustVolume(direction: Int, source: String) {
+        try {
+            val audio = appContext?.getSystemService(Context.AUDIO_SERVICE) as? AudioManager
+            audio?.adjustStreamVolume(
+                AudioManager.STREAM_MUSIC, direction, AudioManager.FLAG_SHOW_UI
+            )
+            Log.i(TAG, "steering key $source -> volume ${if (direction == AudioManager.ADJUST_RAISE) "up" else "down"}")
+        } catch (e: Exception) {
+            Log.i(TAG, "steering key $source -> volume adjust failed: ${e.message}")
+        }
     }
 
     private val callback = CarPlayMediaCallback(::send)
@@ -297,6 +343,11 @@ internal class CarPlayMediaCallback(private val send: (index: Int, source: Strin
             "media key raw keyCode=${event.keyCode} name=${KeyEvent.keyCodeToString(event.keyCode)} " +
                 "action=${event.action} repeat=${event.repeatCount}"
         )
+        // Learn mode: let the mapping dialog capture the key.
+        if (event.action == KeyEvent.ACTION_DOWN && event.repeatCount == 0) {
+            val capture = CarPlayMediaKeys.keyCapture
+            if (capture != null && capture(event.keyCode)) return true
+        }
         val index = CarPlayMediaButton.forKeyCode(event.keyCode) ?: return super.onMediaButtonEvent(mediaButtonIntent)
         if (event.action == KeyEvent.ACTION_DOWN && event.repeatCount == 0) {
             send(index, KeyEvent.keyCodeToString(event.keyCode))

@@ -777,6 +777,12 @@ class CarPlayHostActivity : ComponentActivity() {
             appendLog(
                 "window key raw keyCode=${event.keyCode} name=${KeyEvent.keyCodeToString(event.keyCode)}"
             )
+            // User-configured steering-wheel mapping takes precedence for window keys too.
+            val mapped = CarPlayMediaButton.customKeyMap[event.keyCode]
+            if (mapped != null) {
+                CarPlayMediaKeys.performAction(mapped, "window:${KeyEvent.keyCodeToString(event.keyCode)}")
+                return true
+            }
         }
         if (!CarPlayMediaButton.opensSiri(event.keyCode)) return super.dispatchKeyEvent(event)
         if (event.action == KeyEvent.ACTION_UP) {
@@ -3335,6 +3341,7 @@ class CarPlayHostActivity : ComponentActivity() {
         controller = next
         CarPlayMediaKeys.attach(this, next)
         CarPlayMediaKeys.diagnosticLog = ::appendLog
+        CarPlayMediaKeys.refreshKeyMap(this)
         if (airPlayConfig.videoInCar) CarPlayVideo.attach(this, next)
         val display = CarPlaySessionDisplay(airPlayConfig.main.widthPixels, airPlayConfig.main.heightPixels,
             displayRotation(), hideTopBar, hideBottomBar, size.width, size.height)

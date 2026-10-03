@@ -23,9 +23,11 @@ import android.os.Looper
 import android.provider.Settings
 import android.util.Log
 import android.view.Gravity
+import android.view.KeyEvent
 import android.view.View
 import android.view.ViewGroup
 import android.widget.*
+import com.shilapi.xcertplay.airplay.CarPlayMediaButton
 import androidx.activity.ComponentActivity
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.result.contract.ActivityResultContracts
@@ -63,6 +65,10 @@ class DiPlayActivity : ComponentActivity() {
     private var testToneTrack: AudioTrack? = null
     private var toneStop: Runnable? = null
     private var exportButton: Button? = null
+    /** Steering-wheel key mapping dialog state: action id currently learning, or null. */
+    private var steeringLearning: String? = null
+    private val steeringButtons = mutableMapOf<String, Button>()
+    private var steeringHint: TextView? = null
     private var adbStatus: TextView? = null
     private var adbCheckGeneration = 0
     private val notificationPermission = registerForActivityResult(ActivityResultContracts.RequestPermission()) {
@@ -291,6 +297,10 @@ class DiPlayActivity : ComponentActivity() {
             toggle(card, getString(R.string.full_screen), getString(R.string.hide_the_car_s_system_bars_while_carplay_is_open), AirPlayPersistence.loadHideTopBar(this) && AirPlayPersistence.loadHideBottomBar(this)) {
                 AirPlayPersistence.saveHideTopBar(this, it); AirPlayPersistence.saveHideBottomBar(this, it)
             }
+        }
+        section(content, getString(R.string.steering_wheel_keys)) { card ->
+            card.addView(label(getString(R.string.key_mapping_desc), 15, MUTED))
+            card.addView(button(getString(R.string.key_mapping), false) { showSteeringKeyDialog() }, matchButton(12, 60))
         }
         section(content, getString(R.string.audio_routing)) { card ->
             toggle(card, getString(R.string.contrib_audio_home_toggle_audio_focus), getString(R.string.contrib_audio_home_toggle_audio_focus_desc), AirPlayPersistence.loadAudioFocusEnabled(this)) { AirPlayPersistence.saveAudioFocusEnabled(this, it) }
@@ -639,6 +649,132 @@ class DiPlayActivity : ComponentActivity() {
         parent.addView(label(getString(R.string.contrib_audio_home_nav_channel_note), 14, MUTED).apply {
             setPadding(0, dp(8), 0, dp(18))
         })
+    }
+
+    private fun showSteeringKeyDialog() {
+        steeringLearning = null
+        steeringButtons.clear()
+        val bindings = SteeringKeyMap.loadBindings(this).toMutableMap()
+
+        val hint = label(getString(R.string.key_mapping_desc), 14, MUTED).apply {
+            setPadding(dp(8), 0, dp(8), dp(12))
+        }
+        steeringHint = hint
+
+        val grid = GridLayout(this).apply { columnCount = 2 }
+        for (id in SteeringKeyMap.ACTIONS) {
+            val btn = Button(this).apply {
+                isAllCaps = false; textSize = 16f
+                typeface = Typeface.create("sans-serif-medium", Typeface.NORMAL)
+                stateListAnimator = null
+                val params = GridLayout.LayoutParams().apply {
+                    width = 0; height = dp(72)
+                    columnSpec = GridLayout.spec(GridLayout.UNDEFINED, 1f)
+                    setMargins(dp(6), dp(6), dp(6), dp(6))
+                }
+                layoutParams = params
+            }
+            btn.setOnClickListener { startSteeringLearn(id) }
+            btn.setOnLongClickListener {
+                if (bindings.remove(id) != null) {
+                    SteeringKeyMap.clear(this, id)
+                    CarPlayMediaButton.customKeyMap = SteeringKeyMap.loadReverseMap(this)
+                    refreshSteeringButtons(bindings)
+                    toast("${steeringActionName(id)}: ${getString(R.string.key_unbound)}")
+                }
+                true
+            }
+            steeringButtons[id] = btn
+            grid.addView(btn)
+        }
+        refreshSteeringButtons(bindings)
+
+        val container = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(dp(16), dp(8), dp(16), dp(8))
+            addView(hint); addView(grid)
+        }
+        AlertDialog.Builder(this).setTitle(getString(R.string.key_mapping))
+            .setView(container)
+            .setNegativeButton(getString(R.string.cancel), null)
+            .setOnDismissListener {
+                steeringLearning = null
+                steeringButtons.clear()
+                steeringHint = null
+                CarPlayMediaKeys.keyCapture = null
+            }
+            .show()
+    }
+
+    private fun steeringActionName(id: String): String = when (id) {
+        SteeringKeyMap.ACTION_PREVIOUS -> getString(R.string.steer_previous)
+        SteeringKeyMap.ACTION_NEXT -> getString(R.string.steer_next)
+        SteeringKeyMap.ACTION_PLAY_PAUSE -> getString(R.string.steer_play_pause)
+        SteeringKeyMap.ACTION_VOLUME_UP -> getString(R.string.steer_volume_up)
+        SteeringKeyMap.ACTION_VOLUME_DOWN -> getString(R.string.steer_volume_down)
+        SteeringKeyMap.ACTION_VOICE -> getString(R.string.steer_voice)
+        else -> id
+    }
+
+    private fun refreshSteeringButtons(bindings: Map<String, Int>) {
+        val learning = steeringLearning
+        for ((id, btn) in steeringButtons) {
+            val name = steeringActionName(id)
+            val code = bindings[id]
+            when {
+                id == learning -> {
+                    btn.text = "$name\n${getString(R.string.press_steering_key)}"
+                    btn.background = rounded(Color.rgb(178, 62, 62), Color.rgb(178, 62, 62))
+                    btn.setTextColor(Color.WHITE)
+                }
+                code != null -> {
+                    btn.text = "$name\nkeyCode $code"
+                    btn.background = rounded(Color.rgb(46, 125, 70), Color.rgb(46, 125, 70))
+                    btn.setTextColor(Color.WHITE)
+                }
+                else -> {
+                    btn.text = "$name\n${getString(R.string.tap_to_bind)}"
+                    btn.background = rounded(SURFACE, BORDER)
+                    btn.setTextColor(TEXT)
+                }
+            }
+        }
+        steeringHint?.text = if (learning != null)
+            getString(R.string.press_steering_key)
+        else
+            getString(R.string.key_mapping_desc)
+    }
+
+    private fun startSteeringLearn(id: String) {
+        steeringLearning = id
+        refreshSteeringButtons(SteeringKeyMap.loadBindings(this))
+        // Also capture keys arriving via the MediaSession (when a CarPlay session is active).
+        CarPlayMediaKeys.keyCapture = { code ->
+            val learning = steeringLearning
+            if (learning != null) {
+                runOnUiThread { bindSteeringKey(learning, code) }
+                true
+            } else false
+        }
+    }
+
+    private fun bindSteeringKey(actionId: String, keyCode: Int) {
+        if (steeringLearning != actionId) return
+        steeringLearning = null
+        CarPlayMediaKeys.keyCapture = null
+        SteeringKeyMap.save(this, actionId, keyCode)
+        CarPlayMediaButton.customKeyMap = SteeringKeyMap.loadReverseMap(this)
+        refreshSteeringButtons(SteeringKeyMap.loadBindings(this))
+        toast("${steeringActionName(actionId)}: keyCode $keyCode")
+    }
+
+    override fun dispatchKeyEvent(event: KeyEvent): Boolean {
+        val learning = steeringLearning
+        if (learning != null && event.action == KeyEvent.ACTION_DOWN && event.repeatCount == 0) {
+            bindSteeringKey(learning, event.keyCode)
+            return true
+        }
+        return super.dispatchKeyEvent(event)
     }
 
     private fun showChannelDialog(title: String, current: Int, navigation: Boolean, onApply: (Int) -> Unit) {

@@ -478,4 +478,17 @@
     <string name="center_map_no_permission_screen">此车机没有该权限的设置界面，请通过 ADB 允许。</string>
     <string name="launcher_map_sharing">与其他启动器共享实时地图</string>
     <string name="launcher_map_sharing_description">支持 DiPlay 的启动器可以在自己的主屏幕中显示实时仪表盘地图。默认关闭，因为开启后车机上的任何应用都可以请求该地图。详见 docs/LAUNCHER_INTEGRATION.md。</string>
+    <string name="steering_wheel_keys">方向盘按键</string>
+    <string name="key_mapping">按键映射</string>
+    <string name="key_mapping_desc">把方向盘按键绑定到对应功能。点一下按钮，再按方向盘上的对应按键。</string>
+    <string name="press_steering_key">请按方向盘按键…</string>
+    <string name="tap_to_bind">点击绑定</string>
+    <string name="long_press_to_unbind">长按解绑</string>
+    <string name="steer_previous">上一曲</string>
+    <string name="steer_next">下一曲</string>
+    <string name="steer_play_pause">播放/暂停</string>
+    <string name="steer_volume_up">音量加</string>
+    <string name="steer_volume_down">音量减</string>
+    <string name="steer_voice">语音助手</string>
+    <string name="key_unbound">已解绑</string>
 </resources>
