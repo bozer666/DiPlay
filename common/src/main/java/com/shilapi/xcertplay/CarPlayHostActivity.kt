@@ -8,6 +8,7 @@ import android.content.res.Configuration
 import android.content.res.ColorStateList
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Matrix
 import android.graphics.SurfaceTexture
@@ -84,6 +85,7 @@ import com.shilapi.xcertplay.transport.Iap2IdentificationConfig
 import com.shilapi.xcertplay.transport.Iap2LocationProvider
 import com.shilapi.xcertplay.transport.UsbDeviceId
 import com.shilapi.xcertplay.transport.VehicleSpeedLocationProvider
+import java.io.ByteArrayOutputStream
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.ArrayDeque
@@ -2925,7 +2927,39 @@ class CarPlayHostActivity : ComponentActivity() {
 
     private fun defaultAirPlayIconBytes(): ByteArray =
         // Shown in CarPlay's app list as the "back to the car" button.
-        resources.openRawResource(R.raw.ic_car_home).use { it.readBytes() }
+        // Prefer the head unit's own home-screen icon so the button matches the
+        // car brand; fall back to the packaged generic icon.
+        headUnitHomeIconBytes()
+            ?: resources.openRawResource(R.raw.ic_car_home).use { it.readBytes() }
+
+    /**
+     * Renders the head unit's default launcher icon to a square PNG.
+     * Returns null when it cannot be resolved (then the packaged icon is used).
+     */
+    private fun headUnitHomeIconBytes(): ByteArray? {
+        try {
+            val homeIntent = Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_HOME)
+            val resolveInfo = packageManager.resolveActivity(
+                homeIntent, PackageManager.MATCH_DEFAULT_ONLY
+            ) ?: return null
+            // Never use our own icon.
+            if (resolveInfo.activityInfo?.packageName == packageName) return null
+            val drawable = resolveInfo.loadIcon(packageManager) ?: return null
+            val w = drawable.intrinsicWidth.takeIf { it > 0 } ?: return null
+            val h = drawable.intrinsicHeight.takeIf { it > 0 } ?: return null
+            val size = maxOf(w, h)
+            val bitmap = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888)
+            val canvas = Canvas(bitmap)
+            drawable.setBounds((size - w) / 2, (size - h) / 2, (size + w) / 2, (size + h) / 2)
+            drawable.draw(canvas)
+            return ByteArrayOutputStream().use { out ->
+                if (!bitmap.compress(Bitmap.CompressFormat.PNG, 100, out)) return null
+                out.toByteArray()
+            }
+        } catch (_: Exception) {
+            return null
+        }
+    }
 
     private fun updateAirPlayIconPreview() {
         val preview = iconPreviewView ?: return
