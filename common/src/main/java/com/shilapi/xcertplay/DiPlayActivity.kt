@@ -700,7 +700,7 @@ class DiPlayActivity : ComponentActivity() {
             setPadding(dp(16), dp(8), dp(16), dp(8))
             addView(hint); addView(lastKey); addView(grid)
         }
-        AlertDialog.Builder(this).setTitle(getString(R.string.key_mapping))
+        val dialog = AlertDialog.Builder(this).setTitle(getString(R.string.key_mapping))
             .setView(container)
             .setNegativeButton(getString(R.string.cancel), null)
             .setOnDismissListener {
@@ -710,7 +710,19 @@ class DiPlayActivity : ComponentActivity() {
                 steeringLastKey = null
                 CarPlayMediaKeys.keyCapture = null
             }
-            .show()
+            .create()
+        // The dialog has its own window: keys go to it, not to Activity.dispatchKeyEvent.
+        dialog.setOnKeyListener { _, keyCode, event ->
+            if (event.action == KeyEvent.ACTION_DOWN && event.repeatCount == 0) {
+                showSteeringLastKey(keyCode, "dialog")
+                val learning = steeringLearning
+                if (learning != null) {
+                    bindSteeringKey(learning, keyCode)
+                    true
+                } else false
+            } else false
+        }
+        dialog.show()
     }
 
     /** Show the last received key in the dialog so the user sees immediately if the wheel reaches the app. */
