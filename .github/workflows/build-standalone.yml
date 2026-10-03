@@ -40,6 +40,11 @@ jobs:
           printf '%s' "$DIPLAY_DEBUG_KEYSTORE_B64" | base64 -d > ~/.android/debug.keystore
           chmod 600 ~/.android/debug.keystore
           ls -la ~/.android/debug.keystore
+      - name: Diagnose keystore on runner
+        run: |
+          echo "HOME=$HOME user=$(whoami)"
+          sha256sum ~/.android/debug.keystore
+          keytool -list -keystore ~/.android/debug.keystore -storepass android 2>&1 | head -8
       - name: Build standalone APK
         env:
           DIPLAY_AUTH_ASSETS_DIR: /tmp/diplay-auth
