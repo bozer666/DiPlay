@@ -49,6 +49,11 @@ jobs:
         env:
           DIPLAY_AUTH_ASSETS_DIR: /tmp/diplay-auth
         run: ./gradlew :mobile:assembleStandaloneDebug --stacktrace
+      - name: Check keystore after build
+        run: |
+          ls -la ~/.android/debug.keystore
+          sha256sum ~/.android/debug.keystore
+          keytool -list -keystore ~/.android/debug.keystore -storepass android 2>&1 | grep -E "SHA-256|androiddebugkey" | head -3
       - name: Verify APK signature uses the stable debug key
         run: |
           APKSIGNER=$(ls "$ANDROID_HOME"/build-tools/*/apksigner 2>/dev/null | head -1)
