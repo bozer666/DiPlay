@@ -2951,12 +2951,29 @@ class CarPlayHostActivity : ComponentActivity() {
     private fun headUnitHomeIconBytes(): ByteArray? {
         try {
             val homeIntent = Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_HOME)
-            val resolveInfo = packageManager.resolveActivity(
-                homeIntent, PackageManager.MATCH_DEFAULT_ONLY
-            ) ?: return null
-            // Never use our own icon.
-            if (resolveInfo.activityInfo?.packageName == packageName) return null
-            val drawable = resolveInfo.loadIcon(packageManager) ?: return null
+            // Query all HOME handlers instead of just the default: on some head units
+            // resolveActivity returns a resolver or the wrong activity. Prefer a
+            // system launcher, then anything with a launcher-like package name.
+            val candidates = packageManager.queryIntentActivities(homeIntent, 0)
+                .filter { it.activityInfo?.packageName != packageName }
+            if (candidates.isEmpty()) return null
+            val picked = candidates.firstOrNull { info ->
+                val pkg = info.activityInfo?.packageName.orEmpty()
+                (info.activityInfo?.applicationInfo?.flags
+                    ?.and(android.content.pm.ApplicationInfo.FLAG_SYSTEM) != 0) &&
+                    (pkg.contains("launcher", ignoreCase = true) ||
+                        pkg.contains("home", ignoreCase = true) ||
+                        pkg.contains("lynk", ignoreCase = true))
+            } ?: candidates.firstOrNull { info ->
+                val pkg = info.activityInfo?.packageName.orEmpty()
+                pkg.contains("launcher", ignoreCase = true) ||
+                    pkg.contains("home", ignoreCase = true) ||
+                    pkg.contains("lynk", ignoreCase = true)
+            } ?: candidates.firstOrNull { info ->
+                info.activityInfo?.applicationInfo?.flags
+                    ?.and(android.content.pm.ApplicationInfo.FLAG_SYSTEM) != 0
+            } ?: candidates[0]
+            val drawable = picked.loadIcon(packageManager) ?: return null
             val w = drawable.intrinsicWidth.takeIf { it > 0 } ?: return null
             val h = drawable.intrinsicHeight.takeIf { it > 0 } ?: return null
             val size = maxOf(w, h)
