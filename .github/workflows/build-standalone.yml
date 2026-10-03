@@ -62,7 +62,10 @@ jobs:
           FP=$("$APKSIGNER" verify --print-certs mobile/build/outputs/apk/debug/mobile-debug.apk 2>/dev/null | grep -m1 "SHA-256" | awk '{print $NF}')
           echo "APK cert SHA-256: $FP"
           EXPECTED="B1:4F:7D:3D:93:2D:B6:E8:61:49:41:4D:61:AD:0F:E2:69:1A:26:B3:72:8F:99:51:00:37:93:DF:E2:98:CE:2C"
-          if [ "$FP" != "$EXPECTED" ]; then
+          # Normalize: strip colons, uppercase both sides (apksigner prints lowercase hex without colons)
+          FP_NORM=$(echo "$FP" | tr -d ':' | tr 'a-z' 'A-Z')
+          EXP_NORM=$(echo "$EXPECTED" | tr -d ':' | tr 'a-z' 'A-Z')
+          if [ "$FP_NORM" != "$EXP_NORM" ]; then
             echo "APK was NOT signed with the stable debug keystore; refusing to publish." >&2
             exit 1
           fi
