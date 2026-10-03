@@ -771,7 +771,13 @@ class CarPlayHostActivity : ComponentActivity() {
     }
 
     // The steering-wheel voice key reaches the focused window; while CarPlay is on screen it opens Siri.
+    // Lynk steering-wheel adaptation diagnostic: log every raw key event that reaches the window.
     override fun dispatchKeyEvent(event: KeyEvent): Boolean {
+        if (event.action == KeyEvent.ACTION_DOWN && event.repeatCount == 0) {
+            appendLog(
+                "window key raw keyCode=${event.keyCode} name=${KeyEvent.keyCodeToString(event.keyCode)}"
+            )
+        }
         if (!CarPlayMediaButton.opensSiri(event.keyCode)) return super.dispatchKeyEvent(event)
         if (event.action == KeyEvent.ACTION_UP) {
             val sent = controller?.requestSiri() == true
@@ -3328,6 +3334,7 @@ class CarPlayHostActivity : ComponentActivity() {
         )
         controller = next
         CarPlayMediaKeys.attach(this, next)
+        CarPlayMediaKeys.diagnosticLog = ::appendLog
         if (airPlayConfig.videoInCar) CarPlayVideo.attach(this, next)
         val display = CarPlaySessionDisplay(airPlayConfig.main.widthPixels, airPlayConfig.main.heightPixels,
             displayRotation(), hideTopBar, hideBottomBar, size.width, size.height)
@@ -3528,6 +3535,7 @@ class CarPlayHostActivity : ComponentActivity() {
         val oldController = controller
         val oldSink = sink
         CarPlayMediaKeys.detach(oldController)
+        CarPlayMediaKeys.diagnosticLog = null
         CarPlayBackgroundSession.clear(oldController, keepOwner = true)
         controller = null
         sink = null
@@ -3611,6 +3619,7 @@ class CarPlayHostActivity : ComponentActivity() {
         val oldController = controller
         val oldSink = sink
         CarPlayMediaKeys.detach(oldController)
+        CarPlayMediaKeys.diagnosticLog = null
         CarPlayBackgroundSession.clear(oldController)
         controller = null
         sink = null

@@ -31,6 +31,11 @@ import java.util.concurrent.Executor
  */
 internal object CarPlayMediaKeys {
     private const val TAG = "DiPlay-MediaKeys"
+    /**
+     * Diagnostic hook for raw key events (steering-wheel adaptation).
+     * Set by the host activity to route into the exported diagnostic report.
+     */
+    var diagnosticLog: ((String) -> Unit)? = null
     private const val ACTIONS = PlaybackState.ACTION_PLAY or PlaybackState.ACTION_PAUSE or
         PlaybackState.ACTION_PLAY_PAUSE or PlaybackState.ACTION_SKIP_TO_NEXT or PlaybackState.ACTION_SKIP_TO_PREVIOUS
 
@@ -287,6 +292,11 @@ internal class CarPlayMediaCallback(private val send: (index: Int, source: Strin
     override fun onMediaButtonEvent(mediaButtonIntent: Intent): Boolean {
         @Suppress("DEPRECATION")
         val event = mediaButtonIntent.getParcelableExtra<KeyEvent>(Intent.EXTRA_KEY_EVENT) ?: return false
+        // Lynk steering-wheel adaptation diagnostic: log every raw key event.
+        CarPlayMediaKeys.diagnosticLog?.invoke(
+            "media key raw keyCode=${event.keyCode} name=${KeyEvent.keyCodeToString(event.keyCode)} " +
+                "action=${event.action} repeat=${event.repeatCount}"
+        )
         val index = CarPlayMediaButton.forKeyCode(event.keyCode) ?: return super.onMediaButtonEvent(mediaButtonIntent)
         if (event.action == KeyEvent.ACTION_DOWN && event.repeatCount == 0) {
             send(index, KeyEvent.keyCodeToString(event.keyCode))
