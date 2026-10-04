@@ -2228,12 +2228,21 @@ class DiPlayActivity : ComponentActivity() {
                     appendLine("Head-unit board: ${Build.BOARD}; hardware: ${Build.HARDWARE}; build: ${Build.DISPLAY}")
                     appendLine()
                     appendLine("--- Android displays (instrument-cluster candidates) ---")
-                    val presentationDisplays = appContext.getSystemService(DisplayManager::class.java)
+                    fun displayDesc(d: android.view.Display): String {
+                        val size = android.graphics.Point()
+                        @Suppress("DEPRECATION")
+                        d.getRealSize(size)
+                        return "${d.displayId}:${d.name}:${size.x}x${size.y}"
+                    }
+                    val displayManager = appContext.getSystemService(DisplayManager::class.java)
+                    val presentationDisplays = displayManager
                         ?.getDisplays(DisplayManager.DISPLAY_CATEGORY_PRESENTATION)
-                        ?.joinToString { "${it.displayId}:${it.name}" }
+                        ?.joinToString { displayDesc(it) }
                         .orEmpty().ifEmpty { "none" }
                     appendLine("presentation=$presentationDisplays")
-                    appendLine("all=" + ClusterMapPresentation.describeDisplays(appContext).ifEmpty { "none" })
+                    val allDisplays = displayManager?.displays?.joinToString { displayDesc(it) }
+                        .orEmpty().ifEmpty { "none" }
+                    appendLine("all=$allDisplays")
                     appendLine()
                     appendLine("--- BYD vehicle-data probe ---")
                     appendLine(
