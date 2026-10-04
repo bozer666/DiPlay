@@ -85,7 +85,7 @@ internal class AudioFocusCoordinator(
             AudioChannel.MEDIA -> AudioManager.AUDIOFOCUS_GAIN
             AudioChannel.PHONE -> AudioManager.AUDIOFOCUS_GAIN_TRANSIENT
             AudioChannel.ASSISTANT -> AudioManager.AUDIOFOCUS_GAIN_TRANSIENT_MAY_DUCK
-            AudioChannel.NAVIGATION -> return
+            AudioChannel.NAVIGATION -> AudioManager.AUDIOFOCUS_GAIN_TRANSIENT_MAY_DUCK
         }
         val next = AudioFocusRequest.Builder(gain)
             .setAudioAttributes(primary.attributes)
@@ -1088,15 +1088,12 @@ private class AudioRenderer(
 
     /**
      * Shares a sink-level focus request across all active non-navigation renderers.
-     * Navigation guidance intentionally takes no focus: it overlays media without ducking it.
+     * Navigation guidance requests transient-may-duck focus so media ducks while
+     * guidance plays.
      */
     private fun requestAudioFocus() {
         val channel = mappedChannel ?: return
         val attributes = trackAttributes ?: return
-        if (channel == AudioChannel.NAVIGATION) {
-            Log.i(TAG, "audio focus skipped channel=NAVIGATION; overlays without ducking")
-            return
-        }
         track?.let { audioFocusCoordinator.acquire(it, channel, attributes) }
     }
 
