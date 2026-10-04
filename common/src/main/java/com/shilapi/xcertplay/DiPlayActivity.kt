@@ -13,6 +13,7 @@ import android.content.res.Configuration
 import android.graphics.Color
 import android.graphics.Typeface
 import android.graphics.drawable.GradientDrawable
+import android.hardware.display.DisplayManager
 import android.media.AudioFormat
 import android.media.AudioTrack
 import android.net.Uri
@@ -2225,6 +2226,14 @@ class DiPlayActivity : ComponentActivity() {
                     appendLine("Saved resolution preference (may differ from active session): ${AirPlayPersistence.loadDisplayScaleTenths(appContext) * 10}%")
                     appendLine("Session: ${if (CarPlayBackgroundSession.active) "active" else if (CarPlayBackgroundSession.hasSession()) "connecting" else "stopped"}")
                     appendLine("Head-unit board: ${Build.BOARD}; hardware: ${Build.HARDWARE}; build: ${Build.DISPLAY}")
+                    appendLine()
+                    appendLine("--- Android displays (instrument-cluster candidates) ---")
+                    val presentationDisplays = appContext.getSystemService(DisplayManager::class.java)
+                        ?.getDisplays(DisplayManager.DISPLAY_CATEGORY_PRESENTATION)
+                        ?.joinToString { "${it.displayId}:${it.name}" }
+                        .orEmpty().ifEmpty { "none" }
+                    appendLine("presentation=$presentationDisplays")
+                    appendLine("all=" + ClusterMapPresentation.describeDisplays(appContext).ifEmpty { "none" })
                     appendLine()
                     appendLine("--- BYD vehicle-data probe ---")
                     appendLine(
