@@ -32,6 +32,7 @@ import com.shilapi.xcertplay.airplay.AirPlaySessionListener
 import com.shilapi.xcertplay.airplay.PairingStore
 import com.shilapi.xcertplay.airplay.VideoInCar
 import com.shilapi.xcertplay.airplay.VideoPlaybackDelivery
+import com.shilapi.xcertplay.bluetooth.BluetoothMusicGuard
 import com.shilapi.xcertplay.hud.BydNavigationOutputs
 import com.shilapi.xcertplay.iap2.session.Iap2Session
 import com.shilapi.xcertplay.mfi.Iap2MfiAuthenticationClient
@@ -230,6 +231,11 @@ class CarPlayController(
     @Volatile private var wirelessDiagnostics: WirelessStartupDiagnostics? = null
     @Volatile private var bluetoothSocket: BluetoothSocket? = null
     @Volatile private var bluetoothStream: BluetoothRfcommDuplexStream? = null
+    /** iPhone Bluetooth MAC captured from the wireless bootstrap; drives the music guard. */
+    @Volatile private var wirelessPeerBluetoothAddress: String? = null
+    /** Kicks the peer's A2DP music channel while its CarPlay session is active. */
+    private var bluetoothMusicGuard: BluetoothMusicGuard? = null
+    private var bluetoothMusicSession: AirPlaySession? = null
     @Volatile private var wirelessTunnelChannel: Iap2Session? = null
     @Volatile private var wirelessRuntimeIdentification: Iap2IdentificationConfig? = null
     @Volatile private var wirelessAirPlayEndpoint: Iap2WirelessCarPlayEndpoint? = null
@@ -271,6 +277,7 @@ class CarPlayController(
                 }
             }
             activeSession = session
+            wirelessPeerBluetoothAddress?.let { address -> startBluetoothMusicGuard(session, address) }
             debugLog(
                 "AirPlay session active controller=${session.controllerId ?: "unknown"} " +
                     "peer=${session.host}",
@@ -279,6 +286,7 @@ class CarPlayController(
         }
 
         override fun onSessionEnded(session: AirPlaySession) {
+            if (bluetoothMusicSession === session) stopBluetoothMusicGuard()
             if (activeSession === session) {
                 activeSession = null
                 BydNavigationOutputs.endNow()
@@ -478,6 +486,7 @@ class CarPlayController(
         com.shilapi.xcertplay.glance.CarPlayGlance.setConnected(false)
         BydNavigationOutputs.clearClusterStreamControl(::applyClusterUi)
         closeReceivers()
+        stopBluetoothMusicGuard()
         availabilityPollGeneration.incrementAndGet()
         wirelessGeneration.incrementAndGet()
         permissionPollGeneration += 1
@@ -1076,7 +1085,10 @@ class CarPlayController(
             )
             val socket = device
                     .createRfcommSocketToServiceRecord(UUID.fromString(IAP2_IPHONE_UUID))
-                    .also { bluetoothSocket = it }
+                    .also {
+                        bluetoothSocket = it
+                        wirelessPeerBluetoothAddress = device.address
+                    }
             logBluetoothConnectionSnapshot(device, "before-connect")
             val bluetoothStarted = System.nanoTime()
             try {
@@ -1415,7 +1427,41 @@ class CarPlayController(
 
         val activeSocket = bluetoothSocket
         bluetoothSocket = null
+        wirelessPeerBluetoothAddress = null
         if (activeSocket != null) closeBestEffort("wireless Bluetooth socket") { activeSocket.close() }
+    }
+
+    /**
+     * Starts the A2DP music guard for the wireless CarPlay peer: while CarPlay is
+     * active the iPhone's Bluetooth music channel is disconnected so iOS stops
+     * treating the head unit as a Bluetooth audio output and fighting CarPlay
+     * for the audio route. Only runs for a bonded peer; no-ops otherwise.
+     */
+    private fun startBluetoothMusicGuard(session: AirPlaySession, address: String) {
+        if (!BluetoothAdapter.checkBluetoothAddress(address.uppercase(Locale.US))) return
+        mainHandler.post {
+            if (closed || activeSession !== session || bluetoothMusicSession === session) return@post
+            val bonded = runCatching {
+                bluetoothAdapter?.bondedDevices?.any { it.address.equals(address, true) } == true
+            }.getOrDefault(false)
+            if (!bonded) {
+                debugLog("Bluetooth music guard skipped: peer not bonded address=$address")
+                return@post
+            }
+            stopBluetoothMusicGuard()
+            bluetoothMusicSession = session
+            bluetoothMusicGuard = BluetoothMusicGuard(appContext, address) { message -> debugLog(message) }.also { it.start() }
+        }
+    }
+
+    private fun stopBluetoothMusicGuard() {
+        bluetoothMusicSession = null
+        val guard = bluetoothMusicGuard
+        bluetoothMusicGuard = null
+        if (guard != null) {
+            runCatching { guard.close() }
+            debugLog("Bluetooth music guard stopped")
+        }
     }
 
     private fun startIphone() {
