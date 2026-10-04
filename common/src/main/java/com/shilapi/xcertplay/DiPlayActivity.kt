@@ -95,7 +95,6 @@ class DiPlayActivity : ComponentActivity() {
     private var vehicleProbeOutcome: BydVehicleProbeOutcome? = null
     private var adbStatus: TextView? = null
     private var adbCheckGeneration = 0
-    private var adbStatus: TextView? = null
     private var bydAdbControls: LinearLayout? = null
     private var adbSwitchChangePending = false
     private var pausedForAdbSwitchChange = false
