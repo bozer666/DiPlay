@@ -119,10 +119,10 @@ internal class BluetoothMusicGuard(
                 .getMethod("getPriority", BluetoothDevice::class.java)
                 .invoke(profile, device) as? Int ?: return
             if (originalPriority == null) originalPriority = current
-            if (current == BluetoothProfile.PRIORITY_OFF) return // already blocked in settings
+            if (current == PRIORITY_OFF) return // already blocked in settings
             val blocked = profile.javaClass
                 .getMethod("setPriority", BluetoothDevice::class.java, Int::class.javaPrimitiveType)
-                .invoke(profile, device, BluetoothProfile.PRIORITY_OFF)
+                .invoke(profile, device, PRIORITY_OFF)
             if (blocked == true) {
                 priorityBlocked = true
                 report("Bluetooth music auto-connect blocked (was priority=$current)")
@@ -169,5 +169,7 @@ internal class BluetoothMusicGuard(
     companion object {
         private const val A2DP_SINK = 11
         private const val ACTION_CONNECTION = "android.bluetooth.a2dp-sink.profile.action.CONNECTION_STATE_CHANGED"
+        /** A2DP auto-connect priority "off"; matches BluetoothA2dpSink.PRIORITY_OFF on all API levels. */
+        private const val PRIORITY_OFF = 0
     }
 }
