@@ -58,6 +58,7 @@ import com.shilapi.xcertplay.network.WirelessStartupPolicy
 import com.shilapi.xcertplay.network.WirelessStartupException
 import com.shilapi.xcertplay.network.WirelessStartupFailure
 import com.shilapi.xcertplay.network.WirelessStartupDiagnostics
+import com.shilapi.xcertplay.oneos.OneOsKeyInput
 import com.shilapi.xcertplay.transport.BlockingDuplexByteStream
 import com.shilapi.xcertplay.transport.BluetoothRfcommDuplexStream
 import com.shilapi.xcertplay.transport.Ch341DeviceMatcher
@@ -260,6 +261,9 @@ class CarPlayController(
     /** Kicks the peer's A2DP music channel while its CarPlay session is active. */
     private var bluetoothMusicGuard: BluetoothMusicGuard? = null
     private var bluetoothMusicSession: AirPlaySession? = null
+    /** Geely OneOS 方向盘按键通道（领克/吉利车机私有 Binder API）。 */
+    private var oneOsKeyInput: OneOsKeyInput? = null
+    private var oneOsKeySession: AirPlaySession? = null
     @Volatile private var wirelessTunnelChannel: Iap2Session? = null
     @Volatile private var wirelessRuntimeIdentification: Iap2IdentificationConfig? = null
     @Volatile private var wirelessAirPlayEndpoint: Iap2WirelessCarPlayEndpoint? = null
@@ -303,6 +307,7 @@ class CarPlayController(
             }
             activeSession = session
             wirelessPeerBluetoothAddress?.let { address -> startBluetoothMusicGuard(session, address) }
+            startOneOsKeyInput(session)
             if (replacement) restoreDashboardContent(session)
             debugLog(
                 "AirPlay session active controller=${session.controllerId ?: "unknown"} " +
@@ -313,6 +318,7 @@ class CarPlayController(
 
         override fun onSessionEnded(session: AirPlaySession) {
             if (bluetoothMusicSession === session) stopBluetoothMusicGuard()
+            if (oneOsKeySession === session) stopOneOsKeyInput()
             if (activeSession === session) {
                 activeSession = null
                 BydNavigationOutputs.endNow(preserveTurnOverlay = !closed && config.transport == CarPlayTransport.WIRELESS)
@@ -607,6 +613,7 @@ class CarPlayController(
         BydNavigationOutputs.clearClusterStreamControl(::applyClusterUi)
         closeReceivers()
         stopBluetoothMusicGuard()
+        stopOneOsKeyInput()
         availabilityPollGeneration.incrementAndGet()
         wirelessGeneration.incrementAndGet()
         permissionPollGeneration += 1
@@ -1705,6 +1712,49 @@ class CarPlayController(
         if (guard != null) {
             runCatching { guard.close() }
             debugLog("Bluetooth music guard stopped")
+        }
+    }
+
+    /**
+     * 启动 OneOS 方向盘按键通道（吉利/领克车机）。
+     * 经 OneOS 私有 Binder API 订阅方向盘媒体键，短按直接转 CarPlay HID 发给 iPhone。
+     * OneOS 不可用时只记日志，原有 MediaSession 按键路径不受影响。
+     */
+    private fun startOneOsKeyInput(session: AirPlaySession) {
+        stopOneOsKeyInput()
+        oneOsKeySession = session
+        val keyInput = OneOsKeyInput(appContext, object : OneOsKeyInput.Callback {
+            override fun onOneOsReady() {
+                debugLog("OneOS key input ready")
+            }
+
+            override fun onOneOsUnavailable(reason: String) {
+                debugLog("OneOS key input unavailable: $reason")
+            }
+
+            override fun onMediaAction(hidAction: Int, keyCode: Int, softKeyFunction: Int) {
+                debugLog("OneOS media key keyCode=$keyCode func=$softKeyFunction -> HID $hidAction")
+                if (activeSession === session) {
+                    sendMediaButton(hidAction)
+                }
+            }
+
+            override fun onUnknownKey(keyCode: Int, softKeyFunction: Int) {
+                debugLog("OneOS unknown key keyCode=$keyCode func=$softKeyFunction")
+            }
+        })
+        oneOsKeyInput = keyInput
+        // 独占切歌键，避免车机媒体中心和 DiPlay 双重处理
+        keyInput.start(intercept = true)
+    }
+
+    private fun stopOneOsKeyInput() {
+        oneOsKeySession = null
+        val keyInput = oneOsKeyInput
+        oneOsKeyInput = null
+        if (keyInput != null) {
+            runCatching { keyInput.stop() }
+            debugLog("OneOS key input stopped")
         }
     }
 
