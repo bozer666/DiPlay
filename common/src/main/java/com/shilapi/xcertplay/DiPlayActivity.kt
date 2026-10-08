@@ -2854,7 +2854,32 @@ class DiPlayActivity : ComponentActivity(), AppAppearanceOwner {
                 return true
             }
         }
-        return super.dispatchKeyEvent(event)
+        if (event.action != KeyEvent.ACTION_DOWN && event.action != KeyEvent.ACTION_UP) return super.dispatchKeyEvent(event)
+        val action = windowLearningPresses.filter(
+            Triple(event.deviceId, event.keyCode, event.scanCode),
+            event.action == KeyEvent.ACTION_DOWN, event.repeatCount == 0,
+        ) {
+            val learning = windowLearning
+            if (learning == null || event.keyCode == KeyEvent.KEYCODE_BACK) return@filter WheelZoomKeys.Action.PASS
+            if (inCall(this) || !WheelZoomSettings.siriKey(this)) {
+                cancelKeyLearning()
+                return@filter WheelZoomKeys.Action.PASS
+            }
+            handler.removeCallbacks(endWindowLearning)
+            windowLearning = null
+            val key = WheelKey.of(event)
+            val taken = WheelZoomSettings.conflict(this, learning.role, key)
+            if (taken != null) {
+                Log.i(WheelKeyService.TAG, "${learning.role} key $key refused: it is the $taken key (learnt without the service)")
+                learning.refused(taken)
+            } else {
+                WheelZoomSettings.assign(this, learning.role, key)
+                Log.i(WheelKeyService.TAG, "${learning.role} key is now $key (learnt without the service)")
+                learning.done(key)
+            }
+            WheelZoomKeys.Action.CONSUME
+        }
+        return action != WheelZoomKeys.Action.PASS || super.dispatchKeyEvent(event)
     }
 
     private fun showChannelDialog(title: String, current: Int, navigation: Boolean, onApply: (Int) -> Unit) {
@@ -3360,35 +3385,6 @@ class DiPlayActivity : ComponentActivity(), AppAppearanceOwner {
         windowLearning = null
         cancelled?.invoke()
         applyPendingAppearanceRender()
-    }
-
-    override fun dispatchKeyEvent(event: KeyEvent): Boolean {
-        if (event.action != KeyEvent.ACTION_DOWN && event.action != KeyEvent.ACTION_UP) return super.dispatchKeyEvent(event)
-        val action = windowLearningPresses.filter(
-            Triple(event.deviceId, event.keyCode, event.scanCode),
-            event.action == KeyEvent.ACTION_DOWN, event.repeatCount == 0,
-        ) {
-            val learning = windowLearning
-            if (learning == null || event.keyCode == KeyEvent.KEYCODE_BACK) return@filter WheelZoomKeys.Action.PASS
-            if (inCall(this) || !WheelZoomSettings.siriKey(this)) {
-                cancelKeyLearning()
-                return@filter WheelZoomKeys.Action.PASS
-            }
-            handler.removeCallbacks(endWindowLearning)
-            windowLearning = null
-            val key = WheelKey.of(event)
-            val taken = WheelZoomSettings.conflict(this, learning.role, key)
-            if (taken != null) {
-                Log.i(WheelKeyService.TAG, "${learning.role} key $key refused: it is the $taken key (learnt without the service)")
-                learning.refused(taken)
-            } else {
-                WheelZoomSettings.assign(this, learning.role, key)
-                Log.i(WheelKeyService.TAG, "${learning.role} key is now $key (learnt without the service)")
-                learning.done(key)
-            }
-            WheelZoomKeys.Action.CONSUME
-        }
-        return action != WheelZoomKeys.Action.PASS || super.dispatchKeyEvent(event)
     }
 
     /** The 0.2.9 Dashboard song setting, shown once: in the BYD navigation card, or under Advanced vehicle data. */
