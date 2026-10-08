@@ -1797,17 +1797,18 @@ class CarPlayController(
     private fun startOneOsMusicReporter(session: AirPlaySession) {
         stopOneOsMusicReporter()
         oneOsMusicSession = session
-        val reporter = OneOsMusicReporter(appContext, object : OneOsMusicReporter.Callback {
+        var reporter: OneOsMusicReporter? = null
+        reporter = OneOsMusicReporter(appContext, object : OneOsMusicReporter.Callback {
             override fun onOneOsReady() {
                 debugLog("OneOS music reporter ready")
                 // 就绪时推一次当前状态，避免会话早于 OneOS 就绪导致的首屏空白
                 val current = synchronized(playbackStatus) { playbackStatus.nowPlaying }
                 if (activeSession === session) {
-                    reporter.pushMetadata(
+                    reporter?.pushMetadata(
                         current.title, current.artist, current.album,
                         current.durationMillis, current.elapsedMillis, current.playing,
                     )
-                    reporter.pushPlaying(current.playing)
+                    reporter?.pushPlaying(current.playing)
                 }
             }
 
@@ -1816,7 +1817,7 @@ class CarPlayController(
             }
         })
         oneOsMusicReporter = reporter
-        reporter.start()
+        reporter?.start()
     }
 
     private fun stopOneOsMusicReporter() {
