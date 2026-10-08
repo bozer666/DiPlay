@@ -77,7 +77,7 @@ internal class AudioFocusCoordinator(
 
     @Synchronized
     fun acquire(track: AudioTrack, channel: AudioChannel, attributes: AudioAttributes) {
-        if (closed || !enabled || manager == null || channel == AudioChannel.NAVIGATION) return
+        if (closed || !enabled || manager == null) return
         active[track] = Entry(channel, attributes)
         refreshRequest()
         applyMediaVolume(track, active.getValue(track))
@@ -102,7 +102,13 @@ internal class AudioFocusCoordinator(
     }
 
     private fun refreshRequest() {
-        val primary = active.values.maxByOrNull { it.channel.focusPriority() }
+        // Navigation guidance takes transient-may-duck focus while it speaks so the
+        // framework ducks other audio; phone keeps precedence over guidance.
+        val navEntry = active.values.firstOrNull { it.channel == AudioChannel.NAVIGATION }
+        val primary = when {
+            navEntry != null && active.values.none { it.channel == AudioChannel.PHONE } -> navEntry
+            else -> active.values.maxByOrNull { it.channel.focusPriority() }
+        }
         if (primary == null) {
             focusGeneration += 1
             val abandoned = request
@@ -129,7 +135,11 @@ internal class AudioFocusCoordinator(
         request = next
         requestedChannel = primary.channel
         val result = manager?.requestAudioFocus(next)
-        if (result == AudioManager.AUDIOFOCUS_REQUEST_GRANTED) setMediaVolume(FULL_VOLUME)
+        // Navigation guidance speaks over ducked media: same-app tracks are never
+        // auto-ducked by the framework, so lower our own media here; the MAY_DUCK
+        // request ducks everyone else. Otherwise a fresh grant restores full volume.
+        if (primary.channel == AudioChannel.NAVIGATION) setMediaVolume(DUCKED_VOLUME)
+        else if (result == AudioManager.AUDIOFOCUS_REQUEST_GRANTED) setMediaVolume(FULL_VOLUME)
         val line = "Audio: focus requested channel=${primary.channel} gain=$gain granted=$result activeTracks=${active.size}"
         Log.i(TAG, line)
         runCatching { report(line) }
@@ -141,7 +151,8 @@ internal class AudioFocusCoordinator(
     }
 
     private fun applyMediaVolume(track: AudioTrack, entry: Entry) {
-        // Telephony and assistant speech remain audible, and navigation never enters this map.
+        // Telephony and assistant speech remain audible; navigation enters this map only
+        // to take transient-may-duck focus while guidance plays.
         // This changes only the renderer's relative gain, never Android's user stream volume.
         if (entry.channel != AudioChannel.MEDIA || entry.appliedVolume == mediaVolume) return
         val applied = runCatching { track.setStereoVolume(mediaVolume, mediaVolume) == AudioTrack.SUCCESS }.getOrDefault(false)
@@ -1547,7 +1558,7 @@ private class AudioRenderer(
             .build()
 
     /**
-     * Shares a sink-level focus request across all active non-navigation renderers.
+     * Shares a sink-level focus request across all active renderers.
      * Navigation guidance requests transient-may-duck focus so media ducks while
      * guidance plays.
      */
