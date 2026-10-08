@@ -212,34 +212,43 @@ internal class OneOsInputListener : Binder() {
 internal class OneOsLinkManager(private val remote: IBinder) {
 
     /**
-     * 推送投屏音乐信息。参数语义为推测（对照 MediaData 字段），未在车上验证：
-     *  title, artist, album, coverUri, durationMs, id, uri, ?, ?, sourceOrType(int),
-     *  favored(bool), favorSupported(bool)。
-     * 后 6 个参数传空/0，待车上实测后再排。
+     * 推送投屏音乐信息。参数顺序来自 DBPlay_1_9vpi 反编译的 ILinkManager AIDL
+     * （transaction 17）：
+     *  artistName, albumName, coverArt, lyrics, totalTimesMs, title,
+     *  authorName, writerName, composerName, playingCurrentTimeMs,
+     *  isFavorite, isPlaying。
+     * Boolean 按 int 写（API 28 无 Parcel.writeBoolean）。
      */
     fun setMusicInfo(
+        artistName: String,
+        albumName: String,
+        coverArt: String,
+        lyrics: String,
+        totalTimesMs: Long,
         title: String,
-        artist: String,
-        album: String,
-        coverUri: String,
-        durationMs: Long,
+        authorName: String,
+        writerName: String,
+        composerName: String,
+        playingCurrentTimeMs: Long,
+        isFavorite: Boolean,
+        isPlaying: Boolean,
     ): Boolean {
         val data = Parcel.obtain()
         val reply = Parcel.obtain()
         try {
             data.writeInterfaceToken(OneOsBinder.LM_DESCRIPTOR)
+            data.writeString(artistName)
+            data.writeString(albumName)
+            data.writeString(coverArt)
+            data.writeString(lyrics)
+            data.writeLong(totalTimesMs)
             data.writeString(title)
-            data.writeString(artist)
-            data.writeString(album)
-            data.writeString(coverUri)
-            data.writeLong(durationMs)
-            data.writeString("") // id: unknown
-            data.writeString("") // uri: unknown
-            data.writeString("") // unknown
-            data.writeString("") // unknown
-            data.writeInt(0)     // source/mediaType: unknown
-            data.writeInt(0)     // boolean as int: unknown
-            data.writeInt(0)     // boolean as int: unknown
+            data.writeString(authorName)
+            data.writeString(writerName)
+            data.writeString(composerName)
+            data.writeLong(playingCurrentTimeMs)
+            data.writeInt(if (isFavorite) 1 else 0)
+            data.writeInt(if (isPlaying) 1 else 0)
             if (!remote.transact(OneOsBinder.LM_TRANSACTION_SET_MUSIC_INFO, data, reply, 0)) {
                 return false
             }
@@ -254,14 +263,18 @@ internal class OneOsLinkManager(private val remote: IBinder) {
         }
     }
 
-    /** 推送播放状态。两个 int 的语义未验证（推测：playState, positionOrSource）。 */
-    fun updatePlayState(state: Int, extra: Int): Boolean {
+    /**
+     * 推送播放状态。语义来自 DBPlay_1_9vpi 反编译的源码 Log：
+     * state: 1=播放，其他=停止；brand: 1=HiCar，其他=CarLink。
+     * CarPlay 用 brand=0。
+     */
+    fun updatePlayState(state: Int, brand: Int): Boolean {
         val data = Parcel.obtain()
         val reply = Parcel.obtain()
         try {
             data.writeInterfaceToken(OneOsBinder.LM_DESCRIPTOR)
             data.writeInt(state)
-            data.writeInt(extra)
+            data.writeInt(brand)
             if (!remote.transact(OneOsBinder.LM_TRANSACTION_UPDATE_PLAY_STATE, data, reply, 0)) {
                 return false
             }

@@ -66,16 +66,23 @@ object OneOsMusicProbe {
                     linkManager = OneOsLinkManager(linkBinder)
 
                     val infoOk = linkManager!!.setMusicInfo(
+                        artistName = artist,
+                        albumName = album,
+                        coverArt = "",
+                        lyrics = "",
+                        totalTimesMs = 240_000L,
                         title = title,
-                        artist = artist,
-                        album = album,
-                        coverUri = "",
-                        durationMs = 240_000L,
+                        authorName = "",
+                        writerName = "",
+                        composerName = "",
+                        playingCurrentTimeMs = 0L,
+                        isFavorite = false,
+                        isPlaying = true,
                     )
                     step("setMusicInfo(title=$title, artist=$artist) -> $infoOk")
 
                     val stateOk = linkManager!!.updatePlayState(1, 0)
-                    step("updatePlayState(1, 0) -> $stateOk")
+                    step("updatePlayState(state=1, brand=0) -> $stateOk")
 
                     step("DONE: 请看车机媒体界面/小部件是否有 \"$title\" 显示")
                 } catch (t: Throwable) {

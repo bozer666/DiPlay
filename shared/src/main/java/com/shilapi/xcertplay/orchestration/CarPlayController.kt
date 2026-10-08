@@ -59,6 +59,7 @@ import com.shilapi.xcertplay.network.WirelessStartupException
 import com.shilapi.xcertplay.network.WirelessStartupFailure
 import com.shilapi.xcertplay.network.WirelessStartupDiagnostics
 import com.shilapi.xcertplay.oneos.OneOsKeyInput
+import com.shilapi.xcertplay.oneos.OneOsMusicReporter
 import com.shilapi.xcertplay.transport.BlockingDuplexByteStream
 import com.shilapi.xcertplay.transport.BluetoothRfcommDuplexStream
 import com.shilapi.xcertplay.transport.Ch341DeviceMatcher
@@ -265,6 +266,9 @@ class CarPlayController(
     /** Geely OneOS 方向盘按键通道（领克/吉利车机私有 Binder API）。 */
     private var oneOsKeyInput: OneOsKeyInput? = null
     private var oneOsKeySession: AirPlaySession? = null
+    /** Geely OneOS 车机原生音乐上报（ILinkManager，DBPlay 同款通道）。 */
+    private var oneOsMusicReporter: OneOsMusicReporter? = null
+    private var oneOsMusicSession: AirPlaySession? = null
     @Volatile private var wirelessTunnelChannel: Iap2Session? = null
     @Volatile private var wirelessRuntimeIdentification: Iap2IdentificationConfig? = null
     @Volatile private var wirelessAirPlayEndpoint: Iap2WirelessCarPlayEndpoint? = null
@@ -312,6 +316,7 @@ class CarPlayController(
             activeSession = session
             wirelessPeerBluetoothAddress?.let { address -> startBluetoothMusicGuard(session, address) }
             startOneOsKeyInput(session)
+            startOneOsMusicReporter(session)
             if (replacement) restoreDashboardContent(session)
             debugLog(
                 "AirPlay session active controller=${session.controllerId ?: "unknown"} " +
@@ -323,6 +328,7 @@ class CarPlayController(
         override fun onSessionEnded(session: AirPlaySession) {
             if (bluetoothMusicSession === session) stopBluetoothMusicGuard()
             if (oneOsKeySession === session) stopOneOsKeyInput()
+            if (oneOsMusicSession === session) stopOneOsMusicReporter()
             if (activeSession === session) {
                 activeSession = null
                 BydNavigationOutputs.endNow(preserveTurnOverlay = !closed && config.transport == CarPlayTransport.WIRELESS)
@@ -618,6 +624,7 @@ class CarPlayController(
         closeReceivers()
         stopBluetoothMusicGuard()
         stopOneOsKeyInput()
+        stopOneOsMusicReporter()
         availabilityPollGeneration.incrementAndGet()
         wirelessGeneration.incrementAndGet()
         permissionPollGeneration += 1
@@ -764,6 +771,14 @@ class CarPlayController(
         }?.let { (update, playingChanged) ->
             nowPlayingListener?.invoke(update)
             if (playingChanged) playbackListener?.invoke(update.playing)
+            // OneOS 车机原生音乐上报（DBPlay 同款 ILinkManager 通道）
+            oneOsMusicReporter?.let { reporter ->
+                reporter.pushMetadata(
+                    update.title, update.artist, update.album,
+                    update.durationMillis, update.elapsedMillis, update.playing,
+                )
+                if (playingChanged) reporter.pushPlaying(update.playing)
+            }
         }
     }
 
@@ -1776,6 +1791,41 @@ class CarPlayController(
         if (keyInput != null) {
             runCatching { keyInput.stop() }
             debugLog("OneOS key input stopped")
+        }
+    }
+
+    private fun startOneOsMusicReporter(session: AirPlaySession) {
+        stopOneOsMusicReporter()
+        oneOsMusicSession = session
+        val reporter = OneOsMusicReporter(appContext, object : OneOsMusicReporter.Callback {
+            override fun onOneOsReady() {
+                debugLog("OneOS music reporter ready")
+                // 就绪时推一次当前状态，避免会话早于 OneOS 就绪导致的首屏空白
+                val current = synchronized(playbackStatus) { playbackStatus.nowPlaying }
+                if (activeSession === session) {
+                    reporter.pushMetadata(
+                        current.title, current.artist, current.album,
+                        current.durationMillis, current.elapsedMillis, current.playing,
+                    )
+                    reporter.pushPlaying(current.playing)
+                }
+            }
+
+            override fun onOneOsUnavailable(reason: String) {
+                debugLog("OneOS music reporter unavailable: $reason")
+            }
+        })
+        oneOsMusicReporter = reporter
+        reporter.start()
+    }
+
+    private fun stopOneOsMusicReporter() {
+        oneOsMusicSession = null
+        val reporter = oneOsMusicReporter
+        oneOsMusicReporter = null
+        if (reporter != null) {
+            runCatching { reporter.stop() }
+            debugLog("OneOS music reporter stopped")
         }
     }
 
